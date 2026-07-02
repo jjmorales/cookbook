@@ -221,7 +221,10 @@
 
   // Writes a JSON value back to filePath. Always re-fetches the current
   // sha immediately before writing so two saves in a row don't race.
-  async function writeJsonFile(filePath, value, commitMessage) {
+  // GitHub's Contents API can briefly serve a stale sha right after a
+  // commit (read-after-write lag), which surfaces as a 409 on the PUT.
+  // On a 409, re-fetch the sha and retry once before giving up.
+  async function writeJsonFile(filePath, value, commitMessage, _retried = false) {
     ensureConfigured();
     const { owner, repo, branch } = getConfig();
     let sha;
@@ -241,11 +244,18 @@
     };
     if (sha) body.sha = sha;
 
-    return githubRequest(`/repos/${owner}/${repo}/contents/${filePath}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
+    try {
+      return await githubRequest(`/repos/${owner}/${repo}/contents/${filePath}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+    } catch (err) {
+      if (!_retried && /GitHub API 409/.test(err.message)) {
+        return writeJsonFile(filePath, value, commitMessage, true);
+      }
+      throw err;
+    }
   }
 
   // Generic styled confirm dialog (replaces native confirm()). Resolves
