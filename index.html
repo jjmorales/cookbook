@@ -97,6 +97,7 @@
 
 <script src="js/tips-engine.js"></script>
 <script src="js/github-store.js"></script>
+<script src="js/sw-update.js"></script>
 <script>
 GitHubStore.ensureAccessChoice().then(mode => {
   if (mode === 'view-only') document.getElementById('addRecipeLink').style.display = 'none';
@@ -180,13 +181,6 @@ TipsEngine.loadRecipes()
     grid.innerHTML = `<p style="color:var(--danger)">Couldn't load recipes.json \u2014 ${err.message}</p>`;
   });
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js').catch(err => {
-      console.warn('Service worker registration failed:', err.message);
-    });
-  });
-}
 </script>
 </body>
 </html>

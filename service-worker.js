@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cookbook-shell-v1';
+const CACHE_NAME = 'cookbook-shell-v3';
 
 // List every page/asset that should still work with no connection.
 // Update this list as you add real pages (recipe.html, tips.html, etc).
@@ -8,6 +8,7 @@ const APP_SHELL = [
   './add-recipe.html',
   './css/base.css',
   './js/tips-engine.js',
+  './js/sw-update.js',
   './manifest.webmanifest'
 ];
 
@@ -15,7 +16,12 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL))
   );
-  self.skipWaiting();
+});
+
+// Lets a page's "Update now" button activate a waiting worker immediately
+// instead of leaving it stuck until every old tab closes.
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
