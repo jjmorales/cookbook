@@ -79,6 +79,8 @@
   body.cook-mode ul.ingredients li { font-size: 17px; padding: 12px 0; }
   body.cook-mode ol.steps li { font-size: 17px; padding: 14px 0; }
   body.cook-mode .grid { grid-template-columns: 1fr; }
+
+  body.view-only #editBtn, body.view-only .note-add, body.view-only .note-card .stamp button { display: none; }
 </style>
 </head>
 <body>
@@ -87,6 +89,7 @@
 </div>
 
 <script src="js/tips-engine.js"></script>
+<script src="js/github-store.js"></script>
 <script>
 const params = new URLSearchParams(location.search);
 const recipeId = params.get('id');
@@ -97,6 +100,9 @@ let tipsObj = {};
 let aliasIndex = [];
 
 async function init() {
+  await GitHubStore.ensureAccessChoice();
+  if (GitHubStore.isViewOnly()) document.body.classList.add('view-only');
+
   if (!recipeId) {
     root.innerHTML = '<p>No recipe specified. <a href="index.html">Back to your cookbook</a>.</p>';
     return;
@@ -278,7 +284,17 @@ function setupInteractions() {
 function setupNotes() {
   const notesList = document.getElementById('notesList');
   const noteInput = document.getElementById('noteInput');
+  const addNoteBtn = document.getElementById('addNoteBtn');
   let noteIdCounter = (currentRecipe.notes.reduce((max, n) => Math.max(max, n.id), 0)) + 1;
+
+  // Persists the current in-memory notes list for this recipe back to
+  // data/recipes.json, re-reading the file first so we don't clobber
+  // unrelated edits made elsewhere since this page loaded.
+  async function saveNotes() {
+    const { data: recipes } = await GitHubStore.readJsonFile('data/recipes.json');
+    const next = recipes.map(r => (r.id === currentRecipe.id ? { ...r, notes: currentRecipe.notes } : r));
+    await GitHubStore.writeJsonFile('data/recipes.json', next, `Update notes: ${currentRecipe.title}`);
+  }
 
   function renderNotes() {
     notesList.innerHTML = '';
@@ -295,24 +311,50 @@ function setupNotes() {
           <button type="button" aria-label="Delete note">&times;</button>
         </div>
         <p>${TipsEngine.escapeHtml(note.text)}</p>`;
-      card.querySelector('button').addEventListener('click', () => {
+      card.querySelector('button').addEventListener('click', async () => {
+        const prev = currentRecipe.notes;
         currentRecipe.notes = currentRecipe.notes.filter(n => n.id !== note.id);
         renderNotes();
+        try {
+          await saveNotes();
+        } catch (err) {
+          console.error(err);
+          alert('Could not save to GitHub \u2014 ' + err.message);
+          currentRecipe.notes = prev;
+          renderNotes();
+        }
       });
       notesList.appendChild(card);
     });
   }
 
-  function addNote() {
+  async function addNote() {
     const text = noteInput.value.trim();
     if (!text) return;
     const timestamp = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    currentRecipe.notes.push({ id: noteIdCounter++, timestamp, text });
+    const note = { id: noteIdCounter++, timestamp, text };
+
+    currentRecipe.notes.push(note);
     noteInput.value = '';
     renderNotes();
+
+    const originalLabel = addNoteBtn.textContent;
+    addNoteBtn.disabled = true;
+    addNoteBtn.textContent = 'Saving\u2026';
+    try {
+      await saveNotes();
+    } catch (err) {
+      console.error(err);
+      alert('Could not save to GitHub \u2014 ' + err.message);
+      currentRecipe.notes = currentRecipe.notes.filter(n => n.id !== note.id);
+      renderNotes();
+    } finally {
+      addNoteBtn.disabled = false;
+      addNoteBtn.textContent = originalLabel;
+    }
   }
 
-  document.getElementById('addNoteBtn').addEventListener('click', addNote);
+  addNoteBtn.addEventListener('click', addNote);
   noteInput.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addNote(); }
   });

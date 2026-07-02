@@ -555,7 +555,21 @@
 </div>
 
 <script src="js/tips-engine.js"></script>
+<script src="js/github-store.js"></script>
 <script>
+if (GitHubStore.isViewOnly()) {
+  document.querySelector('.wrap').innerHTML = `
+    <p class="kicker">View only</p>
+    <h1 class="page-title">Add a recipe</h1>
+    <p style="color:var(--muted);font-size:14px;line-height:1.6;max-width:480px;">
+      You're browsing in view-only mode, so adding recipes is turned off.
+      Reload the page and paste in a GitHub token to enable saving.
+    </p>
+    <a class="btn" href="index.html">Back to your cookbook</a>
+  `;
+  throw new Error('view-only mode: add-recipe form disabled');
+}
+
 let ingredientCount = 0;
 let stepCount = 0;
 let allAliases = [];
@@ -792,7 +806,16 @@ document.getElementById('removeImage').addEventListener('click', () => {
   imageInput.value = '';
 });
 
-document.getElementById('saveBtn').addEventListener('click', () => {
+function slugify(title) {
+  return title.trim().toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '') || 'recipe';
+}
+
+async function handleSave() {
+  const title = document.getElementById('recipeTitle').value.trim();
+  if (!title) { alert('Give the recipe a title first.'); return; }
+
   const ingredients = Array.from(document.querySelectorAll('#ingredientRows .row')).map(row => {
     const inputs = row.querySelectorAll('input');
     return { qty: inputs[0].value, name: inputs[1].value };
@@ -802,19 +825,54 @@ document.getElementById('saveBtn').addEventListener('click', () => {
     .map(t => t.value.trim())
     .filter(Boolean);
 
-  const payload = {
-    title: document.getElementById('recipeTitle').value,
-    time: document.getElementById('recipeTime').value,
-    servings: document.getElementById('recipeServings').value,
-    equipment: document.getElementById('recipeEquip').value,
-    tags,
-    ingredients,
-    steps
-  };
+  const editingId = new URLSearchParams(location.search).get('id');
 
-  console.log('Recipe payload', payload);
-  alert('This is a prototype \u2014 payload logged to console. Wiring this to GitHub comes next.');
-});
+  const saveBtn = document.getElementById('saveBtn');
+  const originalLabel = saveBtn.textContent;
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Saving\u2026';
+
+  try {
+    const { data: recipes } = await GitHubStore.readJsonFile('data/recipes.json');
+
+    const existing = editingId ? recipes.find(r => r.id === editingId) : null;
+    const id = existing ? existing.id : slugify(title);
+
+    const recipe = {
+      id,
+      title,
+      kicker: existing ? existing.kicker : (tags[0] || ''),
+      time: document.getElementById('recipeTime').value.trim(),
+      servings: document.getElementById('recipeServings').value.trim(),
+      equipment: document.getElementById('recipeEquip').value.trim(),
+      tags,
+      image: existing ? existing.image : null,
+      ingredients,
+      steps,
+      notes: existing ? existing.notes : []
+    };
+
+    const nextRecipes = existing
+      ? recipes.map(r => (r.id === id ? recipe : r))
+      : [...recipes, recipe];
+
+    await GitHubStore.writeJsonFile(
+      'data/recipes.json',
+      nextRecipes,
+      `${existing ? 'Update' : 'Add'} recipe: ${title}`
+    );
+
+    window.location.href = `recipe.html?id=${encodeURIComponent(id)}`;
+  } catch (err) {
+    console.error(err);
+    alert('Could not save to GitHub \u2014 ' + err.message);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = originalLabel;
+  }
+}
+
+document.getElementById('saveBtn').addEventListener('click', handleSave);
 
 document.getElementById('cancelBtn').addEventListener('click', () => {
   if (confirm('Discard this recipe?')) {
