@@ -63,7 +63,7 @@ cookbook/
 4. Add real icon files to `icons/` (192px, 512px, and a maskable 512px
    variant) so "Add to Home Screen" shows something other than a blank tile.
 
-## Wiring up saving (GitHub Contents API)
+## Wiring up GitHub Contents API
 
 `js/github-store.js` writes `data/recipes.json` straight from the browser
 using the [GitHub Contents API](https://docs.github.com/en/rest/repos/contents).
@@ -109,11 +109,6 @@ and redeploys automatically a minute or so after each save.
 
 ## Known gaps — next steps
 
-- **Editing an existing recipe** isn't prefilled yet. `recipe.html` links
-  its Edit button to `add-recipe.html?id=...`, and the save handler already
-  knows how to update-in-place when that `id` param is present, but the
-  form itself doesn't yet read the param and populate its fields — needs
-  the same data-loading treatment `recipe.html` already has.
 - **Tips library page** doesn't exist yet — `index.html` links to
   `tips.html`, which still needs to be built (a place to view/add/edit
   entries in `data/tips.json` directly, the counterpart to `add-recipe.html`).

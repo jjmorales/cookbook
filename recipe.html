@@ -73,7 +73,7 @@
 
   .hint { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); text-align: center; margin-top: 40px; }
 
-  body.cook-mode .notes-section, body.cook-mode .tips-index, body.cook-mode .hint, body.cook-mode #editBtn { display: none; }
+  body.cook-mode .notes-section, body.cook-mode .tips-index, body.cook-mode .hint, body.cook-mode #editBtn, body.cook-mode #homeBtn { display: none; }
   body.cook-mode .wrap { max-width: 620px; }
   body.cook-mode .recipe-title { font-size: 32px; }
   body.cook-mode ul.ingredients li { font-size: 17px; padding: 12px 0; }
@@ -135,6 +135,7 @@ function render() {
         <h1 class="recipe-title">${TipsEngine.escapeHtml(r.title)}</h1>
       </div>
       <div class="header-actions">
+        <a class="btn" id="homeBtn" href="index.html">Home</a>
         <button type="button" class="btn" id="cookModeBtn">Cook mode</button>
         <a class="btn" id="editBtn" href="add-recipe.html?id=${encodeURIComponent(r.id)}">Edit recipe</a>
       </div>
