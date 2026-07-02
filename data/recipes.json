@@ -1,50 +1,5 @@
 [
   {
-    "id": "weeknight-ramen",
-    "title": "Weeknight ramen",
-    "kicker": "Weeknight / stovetop",
-    "time": "35 min",
-    "servings": "2",
-    "equipment": "Stockpot",
-    "tags": [
-      "Weeknight"
-    ],
-    "image": null,
-    "ingredients": [
-      {
-        "qty": "2 packs",
-        "name": "fresh ramen noodles"
-      },
-      {
-        "qty": "4 cups",
-        "name": "chicken stock"
-      },
-      {
-        "qty": "2 tbsp",
-        "name": "soy sauce"
-      },
-      {
-        "qty": "1 tsp",
-        "name": "sesame oil"
-      },
-      {
-        "qty": "2",
-        "name": "soft-boiled eggs"
-      },
-      {
-        "qty": "2 stalks",
-        "name": "green onion, sliced"
-      }
-    ],
-    "steps": [
-      "Bring stock to a simmer with soy sauce.",
-      "Cook noodles separately according to package instructions.",
-      "Divide noodles into bowls, ladle broth over top.",
-      "Finish with sesame oil, halved soft-boiled eggs, and green onion."
-    ],
-    "notes": []
-  },
-  {
     "id": "sourdough-focaccia",
     "title": "Sourdough focaccia",
     "kicker": "Baking",
