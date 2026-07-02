@@ -477,7 +477,24 @@
 
   button.secondary:hover { border-color: var(--basil-soft); }
 
+  button.danger {
+    background: none;
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 11px 22px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: auto;
+  }
+
+  button.danger:hover { background: var(--danger); color: #fff; }
+
   .hidden-input { display: none; }
+
+  .ghs-modal p.warn { color: var(--danger); font-weight: 500; }
 </style>
 </head>
 <body>
@@ -548,6 +565,7 @@
   </div>
 
   <div class="actions">
+    <button type="button" class="danger" id="deleteBtn" style="display:none">Delete recipe</button>
     <button type="button" class="secondary" id="cancelBtn">Cancel</button>
     <button type="button" class="primary" id="saveBtn">Save recipe</button>
     <input type="hidden" id="existingImage">
@@ -875,6 +893,40 @@ document.getElementById('cancelBtn').addEventListener('click', () => {
   }
 });
 
+async function handleDelete() {
+  const editingId = new URLSearchParams(location.search).get('id');
+  if (!editingId) return;
+
+  const title = document.getElementById('recipeTitle').value.trim() || 'this recipe';
+  const confirmed = await GitHubStore.confirmDialog({
+    title: 'Delete recipe?',
+    message: `This will permanently remove <b>${TipsEngine.escapeHtml(title)}</b> from your cookbook. This can't be undone.`,
+    confirmLabel: 'Delete',
+    cancelLabel: 'Cancel',
+    danger: true
+  });
+  if (!confirmed) return;
+
+  const deleteBtn = document.getElementById('deleteBtn');
+  const originalLabel = deleteBtn.textContent;
+  deleteBtn.disabled = true;
+  deleteBtn.textContent = 'Deleting…';
+
+  try {
+    const { data: recipes } = await GitHubStore.readJsonFile('data/recipes.json');
+    const next = recipes.filter(r => r.id !== editingId);
+    await GitHubStore.writeJsonFile('data/recipes.json', next, `Delete recipe: ${title}`);
+    window.location.href = 'index.html?saved=deleted';
+  } catch (err) {
+    console.error(err);
+    alert('Could not delete from GitHub — ' + err.message);
+    deleteBtn.disabled = false;
+    deleteBtn.textContent = originalLabel;
+  }
+}
+
+document.getElementById('deleteBtn').addEventListener('click', handleDelete);
+
 function showExistingImage(dataUrl) {
   previewThumb.src = dataUrl;
   previewName.textContent = 'Current photo';
@@ -898,6 +950,10 @@ async function init() {
   document.getElementById('pageKicker').textContent = 'Edit entry';
   document.getElementById('pageTitle').textContent = 'Edit recipe';
   document.getElementById('saveBtn').textContent = 'Save changes';
+
+  if (GitHubStore.getToken() && !GitHubStore.isViewOnly()) {
+    document.getElementById('deleteBtn').style.display = '';
+  }
 
   try {
     const recipes = await TipsEngine.loadRecipes();

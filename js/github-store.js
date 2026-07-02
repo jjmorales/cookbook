@@ -110,6 +110,10 @@
     .ghs-modal .ghs-view-only:hover { border-color: var(--basil-soft, #435946); }
     .ghs-modal .ghs-error { color: var(--danger, #A3402A); font-size: 12.5px; margin: -8px 0 14px; display: none; }
     .ghs-modal .ghs-error.show { display: block; }
+    .ghs-modal .ghs-confirm-danger { background: var(--danger, #A3402A); color: #fff; border: none; }
+    .ghs-modal .ghs-confirm-danger:hover { background: #832f21; }
+    .ghs-modal .ghs-confirm-cancel { background: none; border: 1px solid var(--border, #DCD2B8); color: var(--basil-soft, #435946); }
+    .ghs-modal .ghs-confirm-cancel:hover { border-color: var(--basil-soft, #435946); }
   `;
 
   function injectModalStyles() {
@@ -244,12 +248,49 @@
     });
   }
 
+  // Generic styled confirm dialog (replaces native confirm()). Resolves
+  // true if the user confirms, false if they cancel or dismiss.
+  function confirmDialog({ title, message, confirmLabel = 'Confirm', cancelLabel = 'Cancel', danger = false }) {
+    return new Promise(resolve => {
+      injectModalStyles();
+
+      const overlay = document.createElement('div');
+      overlay.className = 'ghs-overlay';
+      overlay.innerHTML = `
+        <div class="ghs-modal" role="alertdialog" aria-modal="true" aria-labelledby="ghsConfirmTitle">
+          <h2 id="ghsConfirmTitle">${title}</h2>
+          <p>${message}</p>
+          <div class="ghs-actions">
+            <button type="button" class="${danger ? 'ghs-confirm-danger' : 'ghs-save'}" id="ghsConfirmOk">${confirmLabel}</button>
+            <button type="button" class="ghs-confirm-cancel" id="ghsConfirmCancel">${cancelLabel}</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+
+      function close(result) {
+        overlay.remove();
+        resolve(result);
+      }
+
+      overlay.querySelector('#ghsConfirmOk').addEventListener('click', () => close(true));
+      overlay.querySelector('#ghsConfirmCancel').addEventListener('click', () => close(false));
+      overlay.addEventListener('click', e => { if (e.target === overlay) close(false); });
+      document.addEventListener('keydown', function onKey(e) {
+        if (e.key === 'Escape') { document.removeEventListener('keydown', onKey); close(false); }
+      });
+
+      overlay.querySelector('#ghsConfirmOk').focus();
+    });
+  }
+
   window.GitHubStore = {
     getToken, setToken, clearToken,
     isViewOnly, setViewOnly, exitViewOnly,
     getConfig, setConfig,
     isConfigured, ensureConfigured,
     ensureAccessChoice,
-    readJsonFile, writeJsonFile
+    readJsonFile, writeJsonFile,
+    confirmDialog
   };
 })();

@@ -109,8 +109,8 @@ GitHubStore.ensureAccessChoice().then(mode => {
 
   const banner = document.getElementById('savedBanner');
   const text = document.getElementById('savedBannerText');
-  text.textContent = (saved === 'updated' ? 'Recipe updated.' : 'Recipe saved.') +
-    ' It can take a minute or so to appear here while the site rebuilds.';
+  const label = saved === 'updated' ? 'Recipe updated.' : saved === 'deleted' ? 'Recipe deleted.' : 'Recipe saved.';
+  text.textContent = label + ' It can take a minute or so to appear here while the site rebuilds.';
   banner.style.display = 'flex';
   document.getElementById('savedBannerClose').addEventListener('click', () => {
     banner.style.display = 'none';
