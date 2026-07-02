@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tips library</title>
+
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#2C3B2E">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png">
+<link rel="apple-touch-icon" href="./icons/icon-1024.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cookbook">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<style>
+  .topbar { background: var(--basil); padding: 22px 20px; }
+  .topbar-inner { max-width: 920px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: baseline; gap: 10px; }
+  .brand .mark { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mustard); border: 1px solid var(--mustard-line); border-radius: 3px; padding: 2px 6px; }
+  .brand h1 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 22px; color: var(--card); margin: 0; }
+  .topbar-actions { display: flex; gap: 10px; }
+  .nav-link { color: var(--mustard-soft); background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.14); }
+  .nav-link:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.24); color: var(--mustard-soft); }
+  .nav-link.primary { background: var(--mustard); border-color: var(--mustard); color: var(--basil); font-weight: 600; }
+  .nav-link.primary:hover { background: #f0b752; color: var(--basil); }
+
+  .wrap { max-width: 920px; padding-top: 28px; }
+
+  .saved-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--mustard-soft); border: 1px solid var(--mustard-line); border-radius: 6px; padding: 12px 16px; margin-bottom: 24px; font-size: 13.5px; color: var(--charcoal); }
+  .saved-banner button { background: none; border: none; color: var(--basil-soft); font-size: 16px; line-height: 1; cursor: pointer; padding: 2px 4px; flex-shrink: 0; }
+
+  .toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 28px; flex-wrap: wrap; }
+  .search { position: relative; flex: 1; min-width: 220px; }
+  .search input { padding-left: 34px; font-size: 14px; }
+  .search .icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 14px; pointer-events: none; }
+
+  /* ===== Form (add/edit) ===== */
+  .tip-form { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 22px 22px 24px; margin-bottom: 34px; display: none; }
+  .tip-form.show { display: block; }
+  .tip-form h2.form-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 20px; color: var(--basil); margin: 0 0 20px; }
+
+  .field { margin-bottom: 16px; }
+
+  .title-field input {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    font-weight: 500;
+    padding: 11px 13px;
+  }
+
+  .tag-field {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .tag-field:focus-within { border-color: var(--mustard-line); }
+
+  .tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--mustard-soft);
+    color: #5C4110;
+    border: 1px solid var(--mustard-line);
+    border-radius: 12px;
+    padding: 3px 6px 3px 10px;
+    font-size: 12.5px;
+    font-weight: 500;
+  }
+
+  .tag-chip button {
+    background: none;
+    border: none;
+    color: #5C4110;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+    padding: 2px;
+    opacity: 0.65;
+  }
+
+  .tag-chip button:hover { opacity: 1; }
+
+  .tag-input {
+    border: none;
+    background: none;
+    outline: none;
+    flex: 1;
+    min-width: 120px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--charcoal);
+    padding: 4px 2px;
+  }
+
+  .field-hint { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+
+  .actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+    margin-top: 4px;
+  }
+
+  button.primary {
+    background: var(--basil);
+    color: var(--card);
+    border: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 11px 22px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  button.primary:hover { background: var(--basil-soft); }
+
+  button.secondary {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--basil-soft);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 11px 22px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  button.secondary:hover { border-color: var(--basil-soft); }
+
+  button.danger {
+    background: none;
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 11px 22px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: auto;
+  }
+
+  button.danger:hover { background: var(--danger); color: #fff; }
+
+  /* ===== Tip cards grid ===== */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; margin-bottom: 44px; }
+  .tip-card { background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--mustard); border-radius: 4px; padding: 16px 18px; }
+  .tip-card h3 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 17px; color: var(--basil); margin: 0 0 6px; }
+  .tip-card p.note { margin: 0 0 12px; font-size: 14px; line-height: 1.6; color: var(--charcoal); }
+  .tip-card .aliases { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .tip-card .alias-pill { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--basil-soft); background: var(--parchment); border: 1px solid var(--border); border-radius: 10px; padding: 2px 9px; }
+  .tip-card .card-actions { display: flex; gap: 8px; }
+  .tip-card .card-actions button { font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 500; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+  .tip-card .edit-btn { background: none; border: 1px solid var(--border); color: var(--basil-soft); }
+  .tip-card .edit-btn:hover { border-color: var(--mustard-line); color: var(--paprika); }
+  .tip-card .delete-btn { background: none; border: 1px solid transparent; color: var(--muted); }
+  .tip-card .delete-btn:hover { color: var(--danger); }
+
+  .empty-slot { border: 1.5px dashed var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; min-height: 140px; cursor: pointer; color: var(--muted); font-size: 13px; text-align: center; padding: 20px; text-decoration: none; transition: border-color 0.15s ease, color 0.15s ease; background: none; width: 100%; font-family: 'Inter', sans-serif; }
+  .empty-slot:hover { border-color: var(--mustard-line); color: var(--paprika); }
+
+  .no-results { color: var(--muted); font-size: 14px; padding: 20px 0; }
+
+  body.view-only .card-actions, body.view-only #addTipBtn { display: none; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="mark">book</span>
+      <h1>Your cookbook</h1>
+    </div>
+    <div class="topbar-actions">
+      <a class="btn nav-link" href="index.html">Recipes</a>
+      <a class="btn nav-link primary" href="#" id="addTipBtn">+ Add tip</a>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <p class="kicker">Ingredient tips</p>
+  <h2 style="font-family:'Fraunces',serif;font-weight:600;font-size:28px;color:var(--basil);margin:0 0 4px;">Tips library</h2>
+  <p style="font-size:13.5px;color:var(--muted);margin:0 0 26px;">
+    These notes auto-link inside any recipe that mentions a matching ingredient. Add, edit, or remove entries here.
+  </p>
+
+  <div class="saved-banner" id="savedBanner" style="display:none">
+    <span id="savedBannerText"></span>
+    <button type="button" id="savedBannerClose" aria-label="Dismiss">&times;</button>
+  </div>
+
+  <form class="tip-form" id="tipForm">
+    <h2 class="form-title" id="formTitle">Add a tip</h2>
+
+    <div class="field title-field">
+      <label for="tipLabel">Ingredient name</label>
+      <input type="text" id="tipLabel" placeholder="Green onion">
+    </div>
+
+    <div class="field">
+      <label for="aliasInput">Aliases</label>
+      <div class="tag-field" id="aliasField">
+        <input type="text" class="tag-input" id="aliasInput" placeholder="Type an alias and press enter">
+      </div>
+      <p class="field-hint">Other words that should match this tip &mdash; e.g. "scallion", "scallions". The ingredient name is included automatically.</p>
+    </div>
+
+    <div class="field">
+      <label for="tipNote">Tip</label>
+      <textarea id="tipNote" rows="3" placeholder="What's worth knowing about this ingredient?"></textarea>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="danger" id="deleteTipBtn" style="display:none">Delete tip</button>
+      <button type="button" class="secondary" id="cancelTipBtn">Cancel</button>
+      <button type="button" class="primary" id="saveTipBtn">Save tip</button>
+    </div>
+  </form>
+
+  <div class="toolbar">
+    <div class="search">
+      <span class="icon">&#8981;</span>
+      <input type="text" placeholder="Search tips or aliases" id="searchInput">
+    </div>
+  </div>
+
+  <div class="section-label">
+    <h2 style="margin:0">All tips</h2>
+    <span class="count" id="tipCount"></span>
+  </div>
+
+  <div class="grid" id="tipGrid"></div>
+
+</div>
+
+<script src="js/tips-engine.js"></script>
+<script src="js/github-store.js"></script>
+<script src="js/sw-update.js"></script>
+<script>
+let allTips = {};
+let editingKey = null;
+let aliases = [];
+
+const tipForm = document.getElementById('tipForm');
+const formTitle = document.getElementById('formTitle');
+const tipLabel = document.getElementById('tipLabel');
+const tipNote = document.getElementById('tipNote');
+const aliasField = document.getElementById('aliasField');
+const aliasInput = document.getElementById('aliasInput');
+const saveTipBtn = document.getElementById('saveTipBtn');
+const deleteTipBtn = document.getElementById('deleteTipBtn');
+const cancelTipBtn = document.getElementById('cancelTipBtn');
+const addTipBtn = document.getElementById('addTipBtn');
+const grid = document.getElementById('tipGrid');
+const searchInput = document.getElementById('searchInput');
+
+GitHubStore.ensureAccessChoice().then(mode => {
+  if (mode === 'view-only') document.body.classList.add('view-only');
+});
+
+(function showSavedBanner() {
+  const params = new URLSearchParams(location.search);
+  const saved = params.get('saved');
+  if (!saved) return;
+
+  const banner = document.getElementById('savedBanner');
+  const text = document.getElementById('savedBannerText');
+  const label = saved === 'updated' ? 'Tip updated.' : saved === 'deleted' ? 'Tip deleted.' : 'Tip saved.';
+  text.textContent = label + ' It can take a minute or so to appear here while the site rebuilds.';
+  banner.style.display = 'flex';
+  document.getElementById('savedBannerClose').addEventListener('click', () => {
+    banner.style.display = 'none';
+  });
+
+  params.delete('saved');
+  const cleanUrl = location.pathname + (params.toString() ? '?' + params.toString() : '');
+  history.replaceState(null, '', cleanUrl);
+})();
+
+function slugify(label) {
+  return label.trim().toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '') || 'tip';
+}
+
+// ----- Alias tag field -----
+function renderAliases() {
+  aliasField.querySelectorAll('.tag-chip').forEach(el => el.remove());
+  aliases.forEach(alias => {
+    const chip = document.createElement('span');
+    chip.className = 'tag-chip';
+    chip.innerHTML = `${TipsEngine.escapeHtml(alias)} <button type="button" aria-label="Remove ${TipsEngine.escapeHtml(alias)} alias">&times;</button>`;
+    chip.querySelector('button').addEventListener('click', () => {
+      aliases = aliases.filter(a => a !== alias);
+      renderAliases();
+    });
+    aliasField.insertBefore(chip, aliasInput);
+  });
+}
+
+function addAlias(raw) {
+  const value = raw.trim().toLowerCase();
+  if (!value) return;
+  if (!aliases.includes(value)) aliases.push(value);
+  aliasInput.value = '';
+  renderAliases();
+}
+
+aliasInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    addAlias(aliasInput.value);
+  } else if (e.key === 'Backspace' && !aliasInput.value && aliases.length) {
+    aliases.pop();
+    renderAliases();
+  }
+});
+
+aliasField.addEventListener('click', () => aliasInput.focus());
+
+// ----- Form open/close -----
+function openForm(key) {
+  editingKey = key || null;
+  aliases = [];
+  aliasInput.value = '';
+
+  if (key) {
+    const tip = allTips[key];
+    formTitle.textContent = 'Edit tip';
+    saveTipBtn.textContent = 'Save changes';
+    tipLabel.value = tip.label || '';
+    tipNote.value = tip.note || '';
+    aliases = (tip.aliases || []).filter(a => a.toLowerCase() !== (tip.label || '').toLowerCase());
+    if (GitHubStore.getToken() && !GitHubStore.isViewOnly()) {
+      deleteTipBtn.style.display = '';
+    }
+  } else {
+    formTitle.textContent = 'Add a tip';
+    saveTipBtn.textContent = 'Save tip';
+    tipLabel.value = '';
+    tipNote.value = '';
+    deleteTipBtn.style.display = 'none';
+  }
+
+  renderAliases();
+  tipForm.classList.add('show');
+  tipForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  tipLabel.focus();
+}
+
+function closeForm() {
+  tipForm.classList.remove('show');
+  editingKey = null;
+}
+
+addTipBtn.addEventListener('click', e => {
+  e.preventDefault();
+  openForm(null);
+});
+
+cancelTipBtn.addEventListener('click', () => {
+  closeForm();
+});
+
+// ----- Save / delete -----
+async function handleSaveTip() {
+  const label = tipLabel.value.trim();
+  if (!label) { alert('Give the tip an ingredient name first.'); return; }
+  const note = tipNote.value.trim();
+  if (!note) { alert('Add the tip text first.'); return; }
+
+  const normalizedLabelAlias = label.toLowerCase();
+  const finalAliases = [normalizedLabelAlias, ...aliases.filter(a => a !== normalizedLabelAlias)];
+
+  const originalLabel = saveTipBtn.textContent;
+  saveTipBtn.disabled = true;
+  saveTipBtn.textContent = 'Saving…';
+
+  try {
+    const { data: tips } = await GitHubStore.readJsonFile('data/tips.json');
+
+    const key = editingKey || slugify(label);
+    const next = { ...tips };
+    next[key] = { label, aliases: finalAliases, note };
+
+    await GitHubStore.writeJsonFile(
+      'data/tips.json',
+      next,
+      `${editingKey ? 'Update' : 'Add'} tip: ${label}`
+    );
+
+    window.location.href = `tips.html?saved=${encodeURIComponent(editingKey ? 'updated' : 'added')}`;
+  } catch (err) {
+    console.error(err);
+    alert('Could not save to GitHub — ' + err.message);
+  } finally {
+    saveTipBtn.disabled = false;
+    saveTipBtn.textContent = originalLabel;
+  }
+}
+
+saveTipBtn.addEventListener('click', handleSaveTip);
+
+async function deleteTip(key, trigger) {
+  const tip = allTips[key];
+  const label = (tip && tip.label) || 'this tip';
+
+  const confirmed = await GitHubStore.confirmDialog({
+    title: 'Delete tip?',
+    message: `This will permanently remove <b>${TipsEngine.escapeHtml(label)}</b> from your tips library. Recipes that reference it will stop auto-linking. This can't be undone.`,
+    confirmLabel: 'Delete',
+    cancelLabel: 'Cancel',
+    danger: true
+  });
+  if (!confirmed) return;
+
+  const originalLabel = trigger.textContent;
+  trigger.disabled = true;
+  trigger.textContent = 'Deleting…';
+
+  try {
+    const { data: tips } = await GitHubStore.readJsonFile('data/tips.json');
+    const next = { ...tips };
+    delete next[key];
+    await GitHubStore.writeJsonFile('data/tips.json', next, `Delete tip: ${label}`);
+    window.location.href = 'tips.html?saved=deleted';
+  } catch (err) {
+    console.error(err);
+    alert('Could not delete from GitHub — ' + err.message);
+    trigger.disabled = false;
+    trigger.textContent = originalLabel;
+  }
+}
+
+deleteTipBtn.addEventListener('click', () => {
+  if (editingKey) deleteTip(editingKey, deleteTipBtn);
+});
+
+// ----- List rendering -----
+function renderGrid() {
+  const q = searchInput.value.toLowerCase().trim();
+  const entries = Object.entries(allTips).filter(([key, tip]) => {
+    if (!q) return true;
+    return tip.label.toLowerCase().includes(q) ||
+      (tip.aliases || []).some(a => a.toLowerCase().includes(q)) ||
+      (tip.note || '').toLowerCase().includes(q);
+  }).sort((a, b) => a[1].label.localeCompare(b[1].label));
+
+  grid.innerHTML = '';
+
+  if (entries.length === 0 && q) {
+    grid.innerHTML = '<p class="no-results">No tips match your search.</p>';
+  }
+
+  entries.forEach(([key, tip]) => {
+    const card = document.createElement('div');
+    card.className = 'tip-card';
+    const otherAliases = (tip.aliases || []).filter(a => a.toLowerCase() !== tip.label.toLowerCase());
+    card.innerHTML = `
+      <h3>${TipsEngine.escapeHtml(tip.label)}</h3>
+      <p class="note">${TipsEngine.escapeHtml(tip.note)}</p>
+      ${otherAliases.length ? `<div class="aliases">${otherAliases.map(a => `<span class="alias-pill">${TipsEngine.escapeHtml(a)}</span>`).join('')}</div>` : ''}
+      <div class="card-actions">
+        <button type="button" class="edit-btn">Edit</button>
+        <button type="button" class="delete-btn">Delete</button>
+      </div>
+    `;
+    card.querySelector('.edit-btn').addEventListener('click', () => openForm(key));
+    card.querySelector('.delete-btn').addEventListener('click', e => deleteTip(key, e.currentTarget));
+    grid.appendChild(card);
+  });
+
+  const emptySlot = document.createElement('button');
+  emptySlot.type = 'button';
+  emptySlot.className = 'empty-slot';
+  emptySlot.textContent = '+ Add your next tip';
+  emptySlot.addEventListener('click', () => openForm(null));
+  grid.appendChild(emptySlot);
+
+  document.getElementById('tipCount').textContent = entries.length + (entries.length === 1 ? ' saved' : ' saved');
+}
+
+searchInput.addEventListener('input', renderGrid);
+
+TipsEngine.loadTips()
+  .then(data => { allTips = data; renderGrid(); })
+  .catch(err => {
+    grid.innerHTML = `<p style="color:var(--danger)">Couldn't load tips.json — ${err.message}</p>`;
+  });
+</script>
+</body>
+</html>

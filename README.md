@@ -13,6 +13,8 @@ cookbook/
 │                         renders ingredients/steps/notes, auto-links tips
 ├── add-recipe.html      Form for adding a new recipe (+ tag chips,
 │                         fuzzy ingredient-tip suggestions, image upload)
+├── tips.html            Tips library — view/search/add/edit/delete
+│                         entries in data/tips.json directly
 ├── manifest.webmanifest PWA config — name, icons, standalone display
 ├── service-worker.js    Offline app-shell caching, required for installability
 │
@@ -106,9 +108,3 @@ Saves commit directly to the branch configured in `js/github-store.js`
 (defaults to `main`). Each save is a real commit — "Add recipe: …",
 "Update recipe: …", "Update notes: …" — so your GitHub Pages site rebuilds
 and redeploys automatically a minute or so after each save.
-
-## Known gaps — next steps
-
-- **Tips library page** doesn't exist yet — `index.html` links to
-  `tips.html`, which still needs to be built (a place to view/add/edit
-  entries in `data/tips.json` directly, the counterpart to `add-recipe.html`).
