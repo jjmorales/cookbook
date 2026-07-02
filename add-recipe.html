@@ -862,7 +862,7 @@ async function handleSave() {
       `${existing ? 'Update' : 'Add'} recipe: ${title}`
     );
 
-    window.location.href = `recipe.html?id=${encodeURIComponent(id)}`;
+    window.location.href = `index.html?saved=${encodeURIComponent(existing ? 'updated' : 'added')}`;
   } catch (err) {
     console.error(err);
     alert('Could not save to GitHub \u2014 ' + err.message);

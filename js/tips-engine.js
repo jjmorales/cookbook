@@ -6,13 +6,13 @@
 (function () {
 
   async function loadTips() {
-    const res = await fetch('data/tips.json');
+    const res = await fetch('data/tips.json', { cache: 'no-store' });
     if (!res.ok) throw new Error('Could not load tips.json');
     return res.json();
   }
 
   async function loadRecipes() {
-    const res = await fetch('data/recipes.json');
+    const res = await fetch('data/recipes.json', { cache: 'no-store' });
     if (!res.ok) throw new Error('Could not load recipes.json');
     return res.json();
   }
