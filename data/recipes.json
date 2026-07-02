@@ -1,0 +1,106 @@
+[
+  {
+    "id": "fried-rice",
+    "title": "Fried rice",
+    "kicker": "Weeknight / stovetop",
+    "time": "20 min",
+    "servings": "2",
+    "equipment": "Wok or wide pan",
+    "tags": ["Weeknight", "One pot"],
+    "image": null,
+    "ingredients": [
+      { "qty": "2 cups", "name": "day-old rice" },
+      { "qty": "3", "name": "eggs, beaten" },
+      { "qty": "2 stalks", "name": "green onion, sliced" },
+      { "qty": "2 tbsp", "name": "soy sauce" },
+      { "qty": "1 clove", "name": "garlic, minced" },
+      { "qty": "1 tbsp", "name": "vegetable oil" },
+      { "qty": "1/2 cup", "name": "frozen peas and carrots" }
+    ],
+    "steps": [
+      "Heat oil in a wok over high heat until shimmering.",
+      "Add garlic and the white part of the green onion, stir-fry 20 seconds until fragrant.",
+      "Push aromatics aside, pour in eggs, scramble until just set.",
+      "Add day-old rice, breaking up clumps, toss to coat in oil for 2\u20133 minutes.",
+      "Stir in peas and carrots, then add soy sauce around the edge of the pan.",
+      "Toss everything together, garnish with the green tops of the green onion, serve hot."
+    ],
+    "notes": [
+      { "id": 1, "timestamp": "Jun 14, 2026", "text": "Rice stuck to the pan a bit \u2014 use a tablespoon more oil next time and let the wok get properly hot before adding it." }
+    ]
+  },
+  {
+    "id": "weeknight-ramen",
+    "title": "Weeknight ramen",
+    "kicker": "Weeknight / stovetop",
+    "time": "35 min",
+    "servings": "2",
+    "equipment": "Stockpot",
+    "tags": ["Weeknight"],
+    "image": null,
+    "ingredients": [
+      { "qty": "2 packs", "name": "fresh ramen noodles" },
+      { "qty": "4 cups", "name": "chicken stock" },
+      { "qty": "2 tbsp", "name": "soy sauce" },
+      { "qty": "1 tsp", "name": "sesame oil" },
+      { "qty": "2", "name": "soft-boiled eggs" },
+      { "qty": "2 stalks", "name": "green onion, sliced" }
+    ],
+    "steps": [
+      "Bring stock to a simmer with soy sauce.",
+      "Cook noodles separately according to package instructions.",
+      "Divide noodles into bowls, ladle broth over top.",
+      "Finish with sesame oil, halved soft-boiled eggs, and green onion."
+    ],
+    "notes": []
+  },
+  {
+    "id": "sourdough-focaccia",
+    "title": "Sourdough focaccia",
+    "kicker": "Baking",
+    "time": "18 hr",
+    "servings": "1 loaf",
+    "equipment": "Sheet pan",
+    "tags": ["Baking"],
+    "image": null,
+    "ingredients": [
+      { "qty": "500 g", "name": "bread flour" },
+      { "qty": "100 g", "name": "active sourdough starter" },
+      { "qty": "375 g", "name": "water" },
+      { "qty": "10 g", "name": "salt" },
+      { "qty": "3 tbsp", "name": "olive oil" }
+    ],
+    "steps": [
+      "Mix flour, starter, and water, rest 30 minutes.",
+      "Add salt, work into the dough, cover and bulk ferment overnight.",
+      "Press into an oiled sheet pan, dimple with fingers, rest 2 hours.",
+      "Bake at 450\u00b0F for 22\u201325 minutes until deep golden."
+    ],
+    "notes": []
+  },
+  {
+    "id": "braised-short-rib",
+    "title": "Braised short rib",
+    "kicker": "Slow cook",
+    "time": "3 hr 20 min",
+    "servings": "4",
+    "equipment": "Dutch oven",
+    "tags": ["Slow cook"],
+    "image": null,
+    "ingredients": [
+      { "qty": "4", "name": "bone-in short ribs" },
+      { "qty": "2", "name": "carrots, chopped" },
+      { "qty": "1", "name": "onion, chopped" },
+      { "qty": "3 cloves", "name": "garlic" },
+      { "qty": "2 cups", "name": "red wine" },
+      { "qty": "2 cups", "name": "beef stock" }
+    ],
+    "steps": [
+      "Sear short ribs on all sides, set aside.",
+      "Saut\u00e9 carrots, onion, and garlic until softened.",
+      "Deglaze with red wine, reduce by half.",
+      "Return ribs to the pot, add stock, cover and braise at 325\u00b0F for 3 hours."
+    ],
+    "notes": []
+  }
+]

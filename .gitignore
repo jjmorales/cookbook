@@ -1,0 +1,21 @@
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor folders
+.vscode/
+.idea/
+
+# If you ever add a build step (bundler, linter, etc.)
+node_modules/
+npm-debug.log*
+
+# Secrets — once the Save button actually writes to GitHub, it'll need a
+# personal access token. Never commit that. Keep it in a local, gitignored
+# config file (or better, a serverless proxy that holds it server-side).
+.env
+config.local.js
+secrets.json
+
+# Local scratch/testing files
+*.local

@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recipe</title>
+
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#2C3B2E">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cookbook">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<style>
+  .wrap { max-width: 760px; }
+
+  .header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+  .header-actions { display: flex; gap: 8px; flex-shrink: 0; margin-top: 4px; }
+
+  h1.recipe-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 40px; line-height: 1.05; color: var(--basil); margin: 0 0 18px; }
+
+  .meta-row { display: flex; gap: 18px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--basil-soft); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 10px 0; margin-bottom: 30px; }
+  .meta-row span { display: flex; align-items: baseline; gap: 5px; }
+  .meta-row b { color: var(--charcoal); font-weight: 500; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 36px; }
+  @media (max-width: 620px) { .grid { grid-template-columns: 1fr; } }
+
+  ul.ingredients { list-style: none; margin: 0; padding: 0; }
+  ul.ingredients li { display: flex; gap: 10px; font-size: 15px; padding: 8px 0; border-bottom: 1px dashed var(--border); line-height: 1.4; }
+  ul.ingredients li:last-child { border-bottom: none; }
+  .qty { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--muted); min-width: 56px; flex-shrink: 0; padding-top: 1px; }
+  .ing-name { position: relative; }
+
+  .has-tip { cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-decoration-color: var(--mustard-line); text-decoration-thickness: 1.5px; text-underline-offset: 3px; font-weight: 500; position: relative; -webkit-tap-highlight-color: transparent; }
+  .has-tip:hover, .has-tip.holding { color: var(--mustard-line); }
+  .has-tip:focus-visible { outline: 2px solid var(--mustard-line); outline-offset: 3px; border-radius: 2px; }
+
+  .peek { position: absolute; left: 0; bottom: calc(100% + 8px); width: max-content; max-width: 260px; background: var(--basil); color: var(--mustard-soft); font-size: 13px; line-height: 1.5; padding: 10px 12px; border-radius: 8px; box-shadow: 0 6px 18px rgba(42, 38, 34, 0.25); opacity: 0; transform: translateY(4px) scale(0.98); transform-origin: bottom left; transition: opacity 0.14s ease, transform 0.14s ease; pointer-events: none; z-index: 20; }
+  .peek::after { content: ''; position: absolute; top: 100%; left: 14px; border: 6px solid transparent; border-top-color: var(--basil); }
+  .peek.show { opacity: 1; transform: translateY(0) scale(1); }
+
+  ol.steps { margin: 0; padding: 0; list-style: none; counter-reset: step; }
+  ol.steps li { counter-increment: step; display: flex; gap: 14px; padding: 10px 0; font-size: 15px; line-height: 1.55; }
+  ol.steps li::before { content: counter(step); font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--card); background: var(--basil); width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .step-text { flex: 1; }
+
+  .tips-index { margin-top: 56px; padding-top: 28px; border-top: 2px solid var(--basil); }
+  .tips-index h2 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 22px; color: var(--basil); margin: 0 0 4px; }
+  .tips-index .sub { font-size: 13px; color: var(--muted); margin: 0 0 24px; }
+  .tip-card { background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--mustard); border-radius: 4px; padding: 16px 18px; margin-bottom: 14px; scroll-margin-top: 24px; transition: box-shadow 0.4s ease, border-left-color 0.4s ease; }
+  .tip-card.flash { box-shadow: 0 0 0 3px var(--mustard-soft); border-left-color: var(--paprika); }
+  .tip-card h3 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 17px; color: var(--basil); margin: 0 0 6px; text-transform: capitalize; }
+  .tip-card p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--charcoal); }
+
+  .notes-section { margin-top: 44px; padding-top: 28px; border-top: 1px solid var(--border); }
+  .notes-section h2 { font-family: 'Fraunces', serif; font-weight: 500; font-style: italic; font-size: 19px; color: var(--paprika); margin: 0 0 4px; }
+  .notes-section .sub { font-size: 13px; color: var(--muted); margin: 0 0 18px; }
+  .note-card { background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--paprika); border-radius: 4px; padding: 12px 16px; margin-bottom: 12px; }
+  .note-card .stamp { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .note-card .stamp button { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 13px; padding: 2px 4px; }
+  .note-card .stamp button:hover { color: var(--danger); }
+  .note-card p { margin: 0; font-size: 14px; line-height: 1.55; color: var(--charcoal); }
+  .note-empty { font-size: 13px; color: var(--muted); font-style: italic; margin: 0 0 16px; }
+  .note-add { display: flex; gap: 10px; align-items: flex-end; }
+  .note-add textarea { flex: 1; resize: vertical; min-height: 42px; line-height: 1.5; }
+  .note-add button { flex-shrink: 0; }
+
+  .hint { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); text-align: center; margin-top: 40px; }
+
+  body.cook-mode .notes-section, body.cook-mode .tips-index, body.cook-mode .hint, body.cook-mode #editBtn { display: none; }
+  body.cook-mode .wrap { max-width: 620px; }
+  body.cook-mode .recipe-title { font-size: 32px; }
+  body.cook-mode ul.ingredients li { font-size: 17px; padding: 12px 0; }
+  body.cook-mode ol.steps li { font-size: 17px; padding: 14px 0; }
+  body.cook-mode .grid { grid-template-columns: 1fr; }
+</style>
+</head>
+<body>
+<div class="wrap" id="recipeRoot">
+  <p class="kicker">Loading recipe\u2026</p>
+</div>
+
+<script src="js/tips-engine.js"></script>
+<script>
+const params = new URLSearchParams(location.search);
+const recipeId = params.get('id');
+const root = document.getElementById('recipeRoot');
+
+let currentRecipe = null;
+let tipsObj = {};
+let aliasIndex = [];
+
+async function init() {
+  if (!recipeId) {
+    root.innerHTML = '<p>No recipe specified. <a href="index.html">Back to your cookbook</a>.</p>';
+    return;
+  }
+  try {
+    const [recipes, tips] = await Promise.all([TipsEngine.loadRecipes(), TipsEngine.loadTips()]);
+    const recipe = recipes.find(r => r.id === recipeId);
+    if (!recipe) {
+      root.innerHTML = `<p>Couldn't find that recipe. <a href="index.html">Back to your cookbook</a>.</p>`;
+      return;
+    }
+    currentRecipe = recipe;
+    tipsObj = tips;
+    aliasIndex = TipsEngine.buildAliasIndex(tips);
+    render();
+  } catch (err) {
+    root.innerHTML = `<p style="color:var(--danger)">Couldn't load recipe data \u2014 ${err.message}</p>`;
+  }
+}
+
+function render() {
+  const r = currentRecipe;
+  document.title = r.title + ' \u2014 Your cookbook';
+
+  root.innerHTML = `
+    <div class="header-row">
+      <div>
+        <p class="kicker">${TipsEngine.escapeHtml(r.kicker || '')}</p>
+        <h1 class="recipe-title">${TipsEngine.escapeHtml(r.title)}</h1>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="btn" id="cookModeBtn">Cook mode</button>
+        <a class="btn" id="editBtn" href="add-recipe.html?id=${encodeURIComponent(r.id)}">Edit recipe</a>
+      </div>
+    </div>
+
+    <div class="meta-row">
+      <span><b>${TipsEngine.escapeHtml(r.time)}</b> total</span>
+      <span><b>${TipsEngine.escapeHtml(r.servings)}</b> servings</span>
+      <span><b>${TipsEngine.escapeHtml(r.equipment || '')}</b></span>
+    </div>
+
+    <div class="grid">
+      <div>
+        <h2 class="section-label">Ingredients</h2>
+        <ul class="ingredients" id="ingredients"></ul>
+      </div>
+      <div>
+        <h2 class="section-label">Method</h2>
+        <ol class="steps" id="steps"></ol>
+      </div>
+    </div>
+
+    <div class="notes-section">
+      <h2>Cook's notes</h2>
+      <p class="sub">Things worth remembering next time you make this.</p>
+      <div id="notesList"></div>
+      <div class="note-add">
+        <textarea id="noteInput" placeholder="e.g. Needed an extra tablespoon of oil, rice stuck to the pan" rows="1"></textarea>
+        <button type="button" class="btn primary" id="addNoteBtn">Add note</button>
+      </div>
+    </div>
+
+    <div class="tips-index">
+      <h2>Ingredient tips</h2>
+      <p class="sub">Notes that automatically light up in any recipe that uses these ingredients.</p>
+      <div id="tipsIndex"></div>
+    </div>
+
+    <p class="hint">hover an underlined ingredient (desktop) \u00b7 press and hold (mobile) \u00b7 click to jump to its note</p>
+  `;
+
+  const ingredientsEl = document.getElementById('ingredients');
+  r.ingredients.forEach(ing => {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="qty">${TipsEngine.escapeHtml(ing.qty)}</span><span class="ing-name">${TipsEngine.renderLinkedText(ing.name, aliasIndex, tipsObj)}</span>`;
+    ingredientsEl.appendChild(li);
+  });
+
+  const stepsEl = document.getElementById('steps');
+  r.steps.forEach(step => {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="step-text">${TipsEngine.renderLinkedText(step, aliasIndex, tipsObj)}</span>`;
+    stepsEl.appendChild(li);
+  });
+
+  const usedKeys = new Set();
+  [...r.ingredients.map(i => i.name), ...r.steps].forEach(text => {
+    const match = TipsEngine.findExactTip(text, aliasIndex);
+    if (match) usedKeys.add(match.key);
+  });
+
+  const tipsIndexEl = document.getElementById('tipsIndex');
+  usedKeys.forEach(key => {
+    const tip = tipsObj[key];
+    if (!tip) return;
+    const card = document.createElement('div');
+    card.className = 'tip-card';
+    card.id = 'tip-' + key;
+    card.innerHTML = `<h3>${TipsEngine.escapeHtml(tip.label)}</h3><p>${TipsEngine.escapeHtml(tip.note)}</p>`;
+    tipsIndexEl.appendChild(card);
+  });
+
+  setupInteractions();
+  setupNotes();
+  setupCookMode();
+}
+
+function setupInteractions() {
+  let holdTimer = null;
+  let didLongPress = false;
+  let openPeek = null;
+
+  function showPeek(el) {
+    const peek = el.querySelector('.peek');
+    if (openPeek && openPeek !== peek) openPeek.classList.remove('show');
+    peek.classList.add('show');
+    openPeek = peek;
+    const rect = peek.getBoundingClientRect();
+    if (rect.left < 8) peek.style.left = (8 - rect.left) + 'px';
+    if (rect.right > window.innerWidth - 8) { peek.style.left = 'auto'; peek.style.right = '0'; }
+  }
+  function hidePeek(el) {
+    const peek = el.querySelector('.peek');
+    peek.classList.remove('show');
+    if (openPeek === peek) openPeek = null;
+  }
+  function jumpToTip(key) {
+    const target = document.getElementById('tip-' + key);
+    if (!target) return;
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    target.classList.add('flash');
+    setTimeout(() => target.classList.remove('flash'), 1400);
+  }
+
+  root.addEventListener('mouseover', e => { const el = e.target.closest('.has-tip'); if (el) showPeek(el); });
+  root.addEventListener('mouseout', e => { const el = e.target.closest('.has-tip'); if (el && !el.contains(e.relatedTarget)) hidePeek(el); });
+  root.addEventListener('focusin', e => { const el = e.target.closest('.has-tip'); if (el) showPeek(el); });
+  root.addEventListener('focusout', e => { const el = e.target.closest('.has-tip'); if (el) hidePeek(el); });
+
+  root.addEventListener('touchstart', e => {
+    const el = e.target.closest('.has-tip');
+    if (!el) return;
+    didLongPress = false;
+    holdTimer = setTimeout(() => {
+      didLongPress = true;
+      el.classList.add('holding');
+      showPeek(el);
+      if (navigator.vibrate) navigator.vibrate(8);
+    }, 420);
+  }, { passive: true });
+
+  root.addEventListener('touchend', e => {
+    const el = e.target.closest('.has-tip');
+    clearTimeout(holdTimer);
+    if (!el) return;
+    el.classList.remove('holding');
+    if (didLongPress) setTimeout(() => hidePeek(el), 900);
+  });
+
+  root.addEventListener('touchmove', () => clearTimeout(holdTimer));
+
+  root.addEventListener('click', e => {
+    const el = e.target.closest('.has-tip');
+    if (!el) return;
+    if (didLongPress) { didLongPress = false; return; }
+    jumpToTip(el.dataset.tip);
+  });
+
+  root.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const el = e.target.closest('.has-tip');
+    if (!el) return;
+    e.preventDefault();
+    jumpToTip(el.dataset.tip);
+  });
+}
+
+function setupNotes() {
+  const notesList = document.getElementById('notesList');
+  const noteInput = document.getElementById('noteInput');
+  let noteIdCounter = (currentRecipe.notes.reduce((max, n) => Math.max(max, n.id), 0)) + 1;
+
+  function renderNotes() {
+    notesList.innerHTML = '';
+    if (currentRecipe.notes.length === 0) {
+      notesList.innerHTML = '<p class="note-empty">No notes yet \u2014 add one after you cook this.</p>';
+      return;
+    }
+    currentRecipe.notes.slice().reverse().forEach(note => {
+      const card = document.createElement('div');
+      card.className = 'note-card';
+      card.innerHTML = `
+        <div class="stamp">
+          <span>${TipsEngine.escapeHtml(note.timestamp)}</span>
+          <button type="button" aria-label="Delete note">&times;</button>
+        </div>
+        <p>${TipsEngine.escapeHtml(note.text)}</p>`;
+      card.querySelector('button').addEventListener('click', () => {
+        currentRecipe.notes = currentRecipe.notes.filter(n => n.id !== note.id);
+        renderNotes();
+      });
+      notesList.appendChild(card);
+    });
+  }
+
+  function addNote() {
+    const text = noteInput.value.trim();
+    if (!text) return;
+    const timestamp = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    currentRecipe.notes.push({ id: noteIdCounter++, timestamp, text });
+    noteInput.value = '';
+    renderNotes();
+  }
+
+  document.getElementById('addNoteBtn').addEventListener('click', addNote);
+  noteInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addNote(); }
+  });
+
+  renderNotes();
+}
+
+function setupCookMode() {
+  let wakeLock = null;
+  const cookModeBtn = document.getElementById('cookModeBtn');
+
+  async function requestWakeLock() {
+    if (!('wakeLock' in navigator)) return;
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    } catch (err) { console.warn('Wake lock request failed:', err.message); }
+  }
+  function releaseWakeLock() { if (wakeLock) { wakeLock.release(); wakeLock = null; } }
+
+  async function enterCookMode() {
+    document.body.classList.add('cook-mode');
+    cookModeBtn.textContent = 'Exit cook mode';
+    cookModeBtn.classList.add('active');
+    if (document.documentElement.requestFullscreen) {
+      try { await document.documentElement.requestFullscreen(); }
+      catch (err) { console.warn('Fullscreen request failed:', err.message); }
+    }
+    await requestWakeLock();
+  }
+
+  async function exitCookMode() {
+    document.body.classList.remove('cook-mode');
+    cookModeBtn.textContent = 'Cook mode';
+    cookModeBtn.classList.remove('active');
+    releaseWakeLock();
+    if (document.fullscreenElement) {
+      try { await document.exitFullscreen(); }
+      catch (err) { console.warn('Exit fullscreen failed:', err.message); }
+    }
+  }
+
+  cookModeBtn.addEventListener('click', () => {
+    document.body.classList.contains('cook-mode') ? exitCookMode() : enterCookMode();
+  });
+
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && document.body.classList.contains('cook-mode')) exitCookMode();
+  });
+
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState === 'visible' && document.body.classList.contains('cook-mode') && !wakeLock) {
+      await requestWakeLock();
+    }
+  });
+}
+
+init();
+</script>
+</body>
+</html>

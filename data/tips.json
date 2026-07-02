@@ -1,0 +1,27 @@
+{
+  "green-onion": {
+    "label": "Green onion",
+    "aliases": ["green onion", "green onions", "scallion", "scallions"],
+    "note": "Use the deep green tops for garnish. Slice the white base and stir-fry it early with the aromatics \u2014 it holds a stronger onion bite than the greens."
+  },
+  "day-old-rice": {
+    "label": "Day-old rice",
+    "aliases": ["day-old rice", "day old rice", "cold rice"],
+    "note": "Fresh rice is too moist and clumps into mush. Refrigerate it overnight so the grains dry out and separate before frying."
+  },
+  "soy-sauce": {
+    "label": "Soy sauce",
+    "aliases": ["soy sauce", "light soy sauce"],
+    "note": "Pour it around the edge of the pan, not directly on the rice \u2014 it hits the hot metal and caramelizes slightly before mixing in."
+  },
+  "garlic": {
+    "label": "Garlic",
+    "aliases": ["garlic", "garlic clove", "garlic cloves"],
+    "note": "Add it after the onions, not before \u2014 garlic burns fast and turns bitter if it hits hot oil first."
+  },
+  "sesame-oil": {
+    "label": "Sesame oil",
+    "aliases": ["sesame oil", "toasted sesame oil"],
+    "note": "This is a finishing oil, not a cooking oil. Stir it in off the heat at the very end so the aroma doesn't cook off."
+  }
+}

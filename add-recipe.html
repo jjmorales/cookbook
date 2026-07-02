@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add recipe</title>
+
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#2C3B2E">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cookbook">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<style>
+  :root {
+    --basil: #2C3B2E;
+    --basil-soft: #435946;
+    --parchment: #EDE4D3;
+    --card: #F6F0E2;
+    --paprika: #C1502E;
+    --mustard: #E8A93B;
+    --mustard-soft: #F4DDA6;
+    --mustard-line: #C98A1E;
+    --charcoal: #2A2622;
+    --muted: #7A756A;
+    --border: #DCD2B8;
+    --danger: #A3402A;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--parchment);
+    color: var(--charcoal);
+    font-family: 'Inter', sans-serif;
+    padding: 40px 20px 100px;
+  }
+
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .kicker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--paprika);
+    margin: 0 0 6px;
+  }
+
+  h1.page-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 34px;
+    color: var(--basil);
+    margin: 0 0 30px;
+  }
+
+  fieldset {
+    border: none;
+    margin: 0 0 34px;
+    padding: 0;
+  }
+
+  h2.section-label {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-style: italic;
+    font-size: 19px;
+    color: var(--paprika);
+    margin: 0 0 14px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  h2.section-label .count {
+    font-family: 'JetBrains Mono', monospace;
+    font-style: normal;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  label {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--basil-soft);
+    margin-bottom: 6px;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  textarea {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    color: var(--charcoal);
+    transition: border-color 0.15s ease;
+  }
+
+  input[type="text"]:focus,
+  input[type="number"]:focus,
+  textarea:focus {
+    outline: none;
+    border-color: var(--mustard-line);
+  }
+
+  textarea { resize: vertical; min-height: 64px; line-height: 1.5; }
+
+  .title-field input {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 500;
+    padding: 12px 14px;
+  }
+
+  .meta-fields {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 34px;
+  }
+
+  @media (max-width: 560px) {
+    .meta-fields { grid-template-columns: 1fr; }
+  }
+
+  .field { margin-bottom: 16px; }
+
+  .tag-field {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .tag-field:focus-within { border-color: var(--mustard-line); }
+
+  .tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--mustard-soft);
+    color: #5C4110;
+    border: 1px solid var(--mustard-line);
+    border-radius: 12px;
+    padding: 3px 6px 3px 10px;
+    font-size: 12.5px;
+    font-weight: 500;
+  }
+
+  .tag-chip button {
+    background: none;
+    border: none;
+    color: #5C4110;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+    padding: 2px;
+    opacity: 0.65;
+  }
+
+  .tag-chip button:hover { opacity: 1; }
+
+  .tag-input {
+    border: none;
+    background: none;
+    outline: none;
+    flex: 1;
+    min-width: 120px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--charcoal);
+    padding: 4px 2px;
+  }
+
+  .tag-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .tag-suggest-btn {
+    background: none;
+    border: 1px dashed var(--border);
+    color: var(--basil-soft);
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+
+  .tag-suggest-btn:hover {
+    border-color: var(--mustard-line);
+    color: var(--paprika);
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 90px 1fr 32px;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .row-wrap {
+    margin-bottom: 10px;
+  }
+
+  .row-wrap .row { margin-bottom: 0; }
+
+  .suggest-chip {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    margin: 6px 0 0 100px;
+    background: var(--mustard-soft);
+    border: 1px solid var(--mustard-line);
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 12.5px;
+    color: #5C4110;
+  }
+
+  .suggest-chip.show { display: flex; }
+
+  .suggest-chip .icon {
+    color: var(--paprika);
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .suggest-chip span.msg { flex: 1; }
+
+  .suggest-chip b { color: var(--basil); }
+
+  .suggest-chip button {
+    background: var(--basil);
+    color: var(--card);
+    border: none;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .suggest-chip button:hover { background: var(--basil-soft); }
+
+  .suggest-chip .dismiss {
+    background: none;
+    color: var(--muted);
+    padding: 4px 6px;
+  }
+
+  .suggest-chip .dismiss:hover { background: none; color: var(--danger); }
+
+  .linked-badge {
+    display: none;
+    align-items: center;
+    gap: 5px;
+    margin: 4px 0 0 100px;
+    font-size: 12px;
+    color: var(--basil-soft);
+  }
+
+  .linked-badge.show { display: flex; }
+
+  .linked-badge .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--mustard-line);
+  }
+
+  .row input { padding: 9px 10px; font-size: 14px; }
+
+  .step-row {
+    display: grid;
+    grid-template-columns: 26px 1fr 32px;
+    gap: 10px;
+    align-items: start;
+    margin-bottom: 10px;
+  }
+
+  .step-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--card);
+    background: var(--basil);
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 8px;
+  }
+
+  .row-remove {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 18px;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s ease, background 0.15s ease;
+  }
+
+  .row-remove:hover {
+    color: var(--danger);
+    background: rgba(163, 64, 42, 0.08);
+  }
+
+  .add-btn {
+    background: none;
+    border: 1px dashed var(--border);
+    color: var(--basil-soft);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 9px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+
+  .add-btn:hover {
+    border-color: var(--mustard-line);
+    color: var(--paprika);
+  }
+
+  .image-drop {
+    border: 1.5px dashed var(--border);
+    border-radius: 6px;
+    background: var(--card);
+    padding: 26px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .image-drop:hover, .image-drop.drag {
+    border-color: var(--mustard-line);
+    background: var(--mustard-soft);
+  }
+
+  .image-drop p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .image-drop .main-hint {
+    font-size: 14px;
+    color: var(--basil-soft);
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .image-preview {
+    display: none;
+    align-items: center;
+    gap: 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+  }
+
+  .image-preview.show { display: flex; }
+
+  .image-preview img {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .image-preview .info {
+    flex: 1;
+    font-size: 13px;
+    color: var(--basil-soft);
+  }
+
+  .image-preview .filename {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--charcoal);
+    word-break: break-all;
+  }
+
+  .tip-banner {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    background: var(--mustard-soft);
+    border-left: 3px solid var(--mustard-line);
+    border-radius: 4px;
+    padding: 12px 14px;
+    margin-bottom: 34px;
+  }
+
+  .tip-banner p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: #5C4110;
+  }
+
+  .tip-banner b { color: var(--paprika); }
+
+  .actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+  }
+
+  button.primary {
+    background: var(--basil);
+    color: var(--card);
+    border: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 11px 22px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  button.primary:hover { background: var(--basil-soft); }
+
+  button.secondary {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--basil-soft);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 11px 22px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  button.secondary:hover { border-color: var(--basil-soft); }
+
+  .hidden-input { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="kicker">New entry</p>
+  <h1 class="page-title">Add a recipe</h1>
+
+  <div class="field title-field">
+    <label for="recipeTitle">Recipe title</label>
+    <input type="text" id="recipeTitle" placeholder="Fried rice">
+  </div>
+
+  <div class="meta-fields">
+    <div class="field" style="margin-bottom:0">
+      <label for="recipeTime">Total time</label>
+      <input type="text" id="recipeTime" placeholder="20 min">
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label for="recipeServings">Servings</label>
+      <input type="text" id="recipeServings" placeholder="2">
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label for="recipeEquip">Equipment</label>
+      <input type="text" id="recipeEquip" placeholder="Wok or wide pan">
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="tagInput">Tags</label>
+    <div class="tag-field" id="tagField">
+      <input type="text" class="tag-input" id="tagInput" placeholder="Type a tag and press enter">
+    </div>
+    <div class="tag-suggestions" id="tagSuggestions"></div>
+  </div>
+
+  <fieldset>
+    <h2 class="section-label">Photo</h2>
+    <div class="image-drop" id="imageDrop">
+      <p class="main-hint">Drop an image or click to upload</p>
+      <p>JPG or PNG, resized automatically before saving</p>
+    </div>
+    <input type="file" accept="image/*" class="hidden-input" id="imageInput">
+    <div class="image-preview" id="imagePreview" style="margin-top:10px">
+      <img id="previewThumb" alt="">
+      <div class="info">
+        <div class="filename" id="previewName"></div>
+        <div id="previewSize"></div>
+      </div>
+      <button type="button" class="row-remove" id="removeImage" aria-label="Remove image">&times;</button>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <h2 class="section-label">Ingredients <span class="count" id="ingCount">0 items</span></h2>
+    <div id="ingredientRows"></div>
+    <button type="button" class="add-btn" id="addIngredient">+ Add ingredient</button>
+  </fieldset>
+
+  <fieldset>
+    <h2 class="section-label">Method <span class="count" id="stepCount">0 steps</span></h2>
+    <div id="stepRows"></div>
+    <button type="button" class="add-btn" id="addStep">+ Add step</button>
+  </fieldset>
+
+  <div class="tip-banner">
+    <p><b>Ingredient tips link automatically.</b> Any word here that matches an entry in your Ingredient tips section gets highlighted and made clickable on the recipe page &mdash; no extra step needed. Manage those notes from the Tips library.</p>
+  </div>
+
+  <div class="actions">
+    <button type="button" class="secondary" id="cancelBtn">Cancel</button>
+    <button type="button" class="primary" id="saveBtn">Save recipe</button>
+  </div>
+
+</div>
+
+<script src="js/tips-engine.js"></script>
+<script>
+let ingredientCount = 0;
+let stepCount = 0;
+let allAliases = [];
+let tipsReady = false;
+
+TipsEngine.loadTips().then(tips => {
+  allAliases = TipsEngine.buildAliasIndex(tips);
+  tipsReady = true;
+}).catch(err => console.warn('Could not load tips.json:', err.message));
+
+function analyzeIngredientText(raw) {
+  if (!tipsReady) return { type: 'empty' };
+  return TipsEngine.analyzeIngredientText(raw, allAliases);
+}
+
+function addIngredientRow(qty = '', name = '') {
+  ingredientCount++;
+  const wrap = document.createElement('div');
+  wrap.className = 'row-wrap';
+  wrap.innerHTML = `
+    <div class="row">
+      <input type="text" placeholder="2 cups" value="${qty}" aria-label="Quantity">
+      <input type="text" placeholder="Ingredient name" value="${name}" aria-label="Ingredient name">
+      <button type="button" class="row-remove" aria-label="Remove ingredient">&times;</button>
+    </div>
+    <div class="suggest-chip" role="status">
+      <span class="icon">&#9888;</span>
+      <span class="msg"></span>
+      <button type="button" class="apply-fix">Fix it</button>
+      <button type="button" class="dismiss" aria-label="Dismiss suggestion">&times;</button>
+    </div>
+    <div class="linked-badge">
+      <span class="dot"></span>
+      <span class="msg"></span>
+    </div>
+  `;
+
+  const nameInput = wrap.querySelectorAll('input')[1];
+  const suggestChip = wrap.querySelector('.suggest-chip');
+  const suggestMsg = suggestChip.querySelector('.msg');
+  const applyFix = suggestChip.querySelector('.apply-fix');
+  const dismissBtn = suggestChip.querySelector('.dismiss');
+  const linkedBadge = wrap.querySelector('.linked-badge');
+  const linkedMsg = linkedBadge.querySelector('.msg');
+
+  let debounceTimer = null;
+  let dismissed = '';
+  let currentSuggestion = null;
+
+  nameInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      const result = analyzeIngredientText(nameInput.value);
+      suggestChip.classList.remove('show');
+      linkedBadge.classList.remove('show');
+
+      if (result.type === 'exact') {
+        linkedMsg.innerHTML = `Linked to <b>${result.label}</b> tip`;
+        linkedBadge.classList.add('show');
+      } else if (result.type === 'fuzzy' && nameInput.value !== dismissed) {
+        currentSuggestion = result;
+        suggestMsg.innerHTML = `Did you mean <b>${result.alias}</b>? This is close to a tip you have saved but won't link as typed.`;
+        suggestChip.classList.add('show');
+      }
+    }, 250);
+  });
+
+  applyFix.addEventListener('click', () => {
+    if (!currentSuggestion) return;
+    const re = new RegExp(currentSuggestion.candidate.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    nameInput.value = nameInput.value.replace(re, currentSuggestion.alias);
+    suggestChip.classList.remove('show');
+    nameInput.dispatchEvent(new Event('input'));
+    nameInput.focus();
+  });
+
+  dismissBtn.addEventListener('click', () => {
+    dismissed = nameInput.value;
+    suggestChip.classList.remove('show');
+  });
+
+  wrap.querySelector('.row-remove').addEventListener('click', () => {
+    wrap.remove();
+    ingredientCount--;
+    updateCounts();
+  });
+
+  document.getElementById('ingredientRows').appendChild(wrap);
+  updateCounts();
+}
+
+function addStepRow(text = '') {
+  stepCount++;
+  const row = document.createElement('div');
+  row.className = 'step-row';
+  row.innerHTML = `
+    <div class="step-num">${stepCount}</div>
+    <textarea placeholder="Describe this step" rows="2" aria-label="Step description">${text}</textarea>
+    <button type="button" class="row-remove" aria-label="Remove step">&times;</button>
+  `;
+  row.querySelector('.row-remove').addEventListener('click', () => {
+    row.remove();
+    renumberSteps();
+  });
+  document.getElementById('stepRows').appendChild(row);
+  updateCounts();
+}
+
+function renumberSteps() {
+  const rows = document.querySelectorAll('#stepRows .step-row');
+  stepCount = rows.length;
+  rows.forEach((row, i) => {
+    row.querySelector('.step-num').textContent = i + 1;
+  });
+  updateCounts();
+}
+
+function updateCounts() {
+  const ingRows = document.querySelectorAll('#ingredientRows .row').length;
+  const stepRows = document.querySelectorAll('#stepRows .step-row').length;
+  document.getElementById('ingCount').textContent = ingRows + (ingRows === 1 ? ' item' : ' items');
+  document.getElementById('stepCount').textContent = stepRows + (stepRows === 1 ? ' step' : ' steps');
+}
+
+document.getElementById('addIngredient').addEventListener('click', () => addIngredientRow());
+document.getElementById('addStep').addEventListener('click', () => addStepRow());
+
+addIngredientRow('2 cups', 'day-old rice');
+addIngredientRow('2 stalks', 'green onion, sliced');
+addIngredientRow('', '');
+addStepRow('Heat oil in a wok over high heat until shimmering.');
+addStepRow('');
+
+// Tags
+let tags = [];
+const presetTags = ['Weeknight', 'Baking', 'Slow cook', 'One pot', 'Vegetarian', 'Meal prep'];
+const tagField = document.getElementById('tagField');
+const tagInput = document.getElementById('tagInput');
+const tagSuggestions = document.getElementById('tagSuggestions');
+
+function renderTags() {
+  tagField.querySelectorAll('.tag-chip').forEach(el => el.remove());
+  tags.forEach(tag => {
+    const chip = document.createElement('span');
+    chip.className = 'tag-chip';
+    chip.innerHTML = `${tag} <button type="button" aria-label="Remove ${tag} tag">&times;</button>`;
+    chip.querySelector('button').addEventListener('click', () => {
+      tags = tags.filter(t => t !== tag);
+      renderTags();
+      renderSuggestions();
+    });
+    tagField.insertBefore(chip, tagInput);
+  });
+}
+
+function renderSuggestions() {
+  tagSuggestions.innerHTML = '';
+  presetTags
+    .filter(t => !tags.includes(t))
+    .forEach(t => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'tag-suggest-btn';
+      btn.textContent = '+ ' + t;
+      btn.addEventListener('click', () => addTag(t));
+      tagSuggestions.appendChild(btn);
+    });
+}
+
+function addTag(raw) {
+  const value = raw.trim();
+  if (!value) return;
+  const exists = tags.some(t => t.toLowerCase() === value.toLowerCase());
+  if (!exists) tags.push(value);
+  tagInput.value = '';
+  renderTags();
+  renderSuggestions();
+}
+
+tagInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    addTag(tagInput.value);
+  } else if (e.key === 'Backspace' && !tagInput.value && tags.length) {
+    tags.pop();
+    renderTags();
+    renderSuggestions();
+  }
+});
+
+tagField.addEventListener('click', () => tagInput.focus());
+
+renderSuggestions();
+
+const imageDrop = document.getElementById('imageDrop');
+const imageInput = document.getElementById('imageInput');
+const imagePreview = document.getElementById('imagePreview');
+const previewThumb = document.getElementById('previewThumb');
+const previewName = document.getElementById('previewName');
+const previewSize = document.getElementById('previewSize');
+
+imageDrop.addEventListener('click', () => imageInput.click());
+
+imageDrop.addEventListener('dragover', e => {
+  e.preventDefault();
+  imageDrop.classList.add('drag');
+});
+imageDrop.addEventListener('dragleave', () => imageDrop.classList.remove('drag'));
+imageDrop.addEventListener('drop', e => {
+  e.preventDefault();
+  imageDrop.classList.remove('drag');
+  if (e.dataTransfer.files[0]) handleImage(e.dataTransfer.files[0]);
+});
+
+imageInput.addEventListener('change', () => {
+  if (imageInput.files[0]) handleImage(imageInput.files[0]);
+});
+
+function handleImage(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    previewThumb.src = e.target.result;
+    previewName.textContent = file.name;
+    previewSize.textContent = (file.size / 1024).toFixed(0) + ' KB';
+    imagePreview.classList.add('show');
+    imageDrop.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+document.getElementById('removeImage').addEventListener('click', () => {
+  imagePreview.classList.remove('show');
+  imageDrop.style.display = 'block';
+  imageInput.value = '';
+});
+
+document.getElementById('saveBtn').addEventListener('click', () => {
+  const ingredients = Array.from(document.querySelectorAll('#ingredientRows .row')).map(row => {
+    const inputs = row.querySelectorAll('input');
+    return { qty: inputs[0].value, name: inputs[1].value };
+  }).filter(i => i.name.trim());
+
+  const steps = Array.from(document.querySelectorAll('#stepRows .step-row textarea'))
+    .map(t => t.value.trim())
+    .filter(Boolean);
+
+  const payload = {
+    title: document.getElementById('recipeTitle').value,
+    time: document.getElementById('recipeTime').value,
+    servings: document.getElementById('recipeServings').value,
+    equipment: document.getElementById('recipeEquip').value,
+    tags,
+    ingredients,
+    steps
+  };
+
+  console.log('Recipe payload', payload);
+  alert('This is a prototype \u2014 payload logged to console. Wiring this to GitHub comes next.');
+});
+
+document.getElementById('cancelBtn').addEventListener('click', () => {
+  if (confirm('Discard this recipe?')) {
+    window.location.href = 'index.html';
+  }
+});
+</script>
+</body>
+</html>
