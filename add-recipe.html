@@ -483,8 +483,8 @@
 <body>
 <div class="wrap">
 
-  <p class="kicker">New entry</p>
-  <h1 class="page-title">Add a recipe</h1>
+  <p class="kicker" id="pageKicker">New entry</p>
+  <h1 class="page-title" id="pageTitle">Add a recipe</h1>
 
   <div class="field title-field">
     <label for="recipeTitle">Recipe title</label>
@@ -550,6 +550,7 @@
   <div class="actions">
     <button type="button" class="secondary" id="cancelBtn">Cancel</button>
     <button type="button" class="primary" id="saveBtn">Save recipe</button>
+    <input type="hidden" id="existingImage">
   </div>
 
 </div>
@@ -696,12 +697,6 @@ function updateCounts() {
 
 document.getElementById('addIngredient').addEventListener('click', () => addIngredientRow());
 document.getElementById('addStep').addEventListener('click', () => addStepRow());
-
-addIngredientRow('2 cups', 'day-old rice');
-addIngredientRow('2 stalks', 'green onion, sliced');
-addIngredientRow('', '');
-addStepRow('Heat oil in a wok over high heat until shimmering.');
-addStepRow('');
 
 // Tags
 let tags = [];
@@ -879,6 +874,62 @@ document.getElementById('cancelBtn').addEventListener('click', () => {
     window.location.href = 'index.html';
   }
 });
+
+function showExistingImage(dataUrl) {
+  previewThumb.src = dataUrl;
+  previewName.textContent = 'Current photo';
+  previewSize.textContent = '';
+  imagePreview.classList.add('show');
+  imageDrop.style.display = 'none';
+}
+
+async function init() {
+  const editingId = new URLSearchParams(location.search).get('id');
+
+  if (!editingId) {
+    addIngredientRow('2 cups', 'day-old rice');
+    addIngredientRow('2 stalks', 'green onion, sliced');
+    addIngredientRow('', '');
+    addStepRow('Heat oil in a wok over high heat until shimmering.');
+    addStepRow('');
+    return;
+  }
+
+  document.getElementById('pageKicker').textContent = 'Edit entry';
+  document.getElementById('pageTitle').textContent = 'Edit recipe';
+  document.getElementById('saveBtn').textContent = 'Save changes';
+
+  try {
+    const recipes = await TipsEngine.loadRecipes();
+    const recipe = recipes.find(r => r.id === editingId);
+    if (!recipe) {
+      alert("Couldn't find that recipe to edit.");
+      addStepRow('');
+      return;
+    }
+
+    document.getElementById('recipeTitle').value = recipe.title || '';
+    document.getElementById('recipeTime').value = recipe.time || '';
+    document.getElementById('recipeServings').value = recipe.servings || '';
+    document.getElementById('recipeEquip').value = recipe.equipment || '';
+
+    (recipe.tags || []).forEach(addTag);
+
+    if (recipe.image) showExistingImage(recipe.image);
+
+    const ingredients = recipe.ingredients && recipe.ingredients.length ? recipe.ingredients : [{ qty: '', name: '' }];
+    ingredients.forEach(ing => addIngredientRow(ing.qty, ing.name));
+
+    const steps = recipe.steps && recipe.steps.length ? recipe.steps : [''];
+    steps.forEach(step => addStepRow(step));
+  } catch (err) {
+    console.error(err);
+    alert("Couldn't load recipe data — " + err.message);
+    addStepRow('');
+  }
+}
+
+init();
 </script>
 </body>
 </html>
