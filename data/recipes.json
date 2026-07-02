@@ -1,57 +1,5 @@
 [
   {
-    "id": "fried-rice",
-    "title": "Fried rice",
-    "kicker": "Weeknight / stovetop",
-    "time": "20 min",
-    "servings": "2",
-    "equipment": "Wok or wide pan",
-    "tags": [
-      "Weeknight",
-      "One pot"
-    ],
-    "image": null,
-    "ingredients": [
-      {
-        "qty": "2 cups",
-        "name": "day-old rice"
-      },
-      {
-        "qty": "3",
-        "name": "eggs, beaten"
-      },
-      {
-        "qty": "2 stalks",
-        "name": "green onion, sliced"
-      },
-      {
-        "qty": "2 tbsp",
-        "name": "soy sauce"
-      },
-      {
-        "qty": "1 clove",
-        "name": "garlic, minced"
-      },
-      {
-        "qty": "1 tbsp",
-        "name": "vegetable oil"
-      },
-      {
-        "qty": "1/2 cup",
-        "name": "frozen peas and carrots"
-      }
-    ],
-    "steps": [
-      "Heat oil in a wok over high heat until shimmering.",
-      "Add garlic and the white part of the green onion, stir-fry 20 seconds until fragrant.",
-      "Push aromatics aside, pour in eggs, scramble until just set.",
-      "Add day-old rice, breaking up clumps, toss to coat in oil for 2–3 minutes.",
-      "Stir in peas and carrots, then add soy sauce around the edge of the pan.",
-      "Toss everything together, garnish with the green tops of the green onion, serve hot."
-    ],
-    "notes": []
-  },
-  {
     "id": "weeknight-ramen",
     "title": "Weeknight ramen",
     "kicker": "Weeknight / stovetop",
