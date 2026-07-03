@@ -735,6 +735,12 @@ const previewThumb = document.getElementById('previewThumb');
 const previewName = document.getElementById('previewName');
 const previewSize = document.getElementById('previewSize');
 
+// Tracks the pending photo change for this edit session:
+//   null      -> no change, keep whatever the recipe already has
+//   { base64, mimeType } -> a new photo was picked, to be committed on save
+//   'removed' -> the user cleared the existing photo
+let pendingImage = null;
+
 imageDrop.addEventListener('click', () => imageInput.click());
 
 imageDrop.addEventListener('dragover', e => {
@@ -752,19 +758,75 @@ imageInput.addEventListener('change', () => {
   if (imageInput.files[0]) handleImage(imageInput.files[0]);
 });
 
-function handleImage(file) {
-  const reader = new FileReader();
-  reader.onload = e => {
-    previewThumb.src = e.target.result;
+// Downscales and re-encodes the image on a canvas so the result comfortably
+// fits under the GitHub Contents API's 1MB single-PUT limit (see
+// images/recipes/README.txt), then shows the compressed result as the preview.
+const MAX_DIMENSION = 1600;
+const JPEG_QUALITY = 0.82;
+
+function resizeAndCompress(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      let { width, height } = img;
+      if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+        const scale = MAX_DIMENSION / Math.max(width, height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      canvas.toBlob(blob => {
+        if (!blob) { reject(new Error('Could not process that image.')); return; }
+        resolve(blob);
+      }, 'image/jpeg', JPEG_QUALITY);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Could not read that image file.'));
+    };
+    img.src = objectUrl;
+  });
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = () => reject(new Error('Could not read that image file.'));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function handleImage(file) {
+  if (!file.type.startsWith('image/')) { alert('Please choose a JPG or PNG image.'); return; }
+
+  imageDrop.style.pointerEvents = 'none';
+  try {
+    const blob = await resizeAndCompress(file);
+    const base64 = await blobToBase64(blob);
+
+    pendingImage = { base64, mimeType: 'image/jpeg' };
+
+    previewThumb.src = 'data:image/jpeg;base64,' + base64;
     previewName.textContent = file.name;
-    previewSize.textContent = (file.size / 1024).toFixed(0) + ' KB';
+    previewSize.textContent = (blob.size / 1024).toFixed(0) + ' KB';
     imagePreview.classList.add('show');
     imageDrop.style.display = 'none';
-  };
-  reader.readAsDataURL(file);
+  } catch (err) {
+    console.error(err);
+    alert(err.message || 'Could not process that image.');
+  } finally {
+    imageDrop.style.pointerEvents = '';
+  }
 }
 
 document.getElementById('removeImage').addEventListener('click', () => {
+  pendingImage = 'removed';
   imagePreview.classList.remove('show');
   imageDrop.style.display = 'block';
   imageInput.value = '';
@@ -796,6 +858,21 @@ async function handleSave() {
     const existing = editingId ? recipes.find(r => r.id === editingId) : null;
     const id = existing ? existing.id : TipsEngine.slugify(title, 'recipe');
 
+    let image = existing ? existing.image : null;
+    if (pendingImage === 'removed') {
+      image = null;
+    } else if (pendingImage) {
+      saveBtn.textContent = 'Uploading photo…';
+      const imagePath = `images/recipes/${id}.jpg`;
+      await GitHubStore.writeBinaryFile(
+        imagePath,
+        pendingImage.base64,
+        `${existing ? 'Update' : 'Add'} photo for recipe: ${title}`
+      );
+      image = imagePath;
+      saveBtn.textContent = 'Saving…';
+    }
+
     const recipe = {
       id,
       title,
@@ -804,7 +881,7 @@ async function handleSave() {
       servings: document.getElementById('recipeServings').value.trim(),
       equipment: document.getElementById('recipeEquip').value.trim(),
       tags,
-      image: existing ? existing.image : null,
+      image,
       ingredients,
       steps,
       notes: existing ? existing.notes : []

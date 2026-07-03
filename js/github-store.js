@@ -258,6 +258,42 @@
     }
   }
 
+  // Writes raw base64 content (e.g. an image) to filePath, mirroring
+  // writeJsonFile's read-sha-then-put-with-retry-on-409 flow.
+  async function writeBinaryFile(filePath, base64Content, commitMessage, _retried = false) {
+    ensureConfigured();
+    const { owner, repo, branch } = getConfig();
+    let sha;
+    try {
+      const current = await githubRequest(
+        `/repos/${owner}/${repo}/contents/${filePath}?ref=${encodeURIComponent(branch)}`
+      );
+      sha = current.sha;
+    } catch (err) {
+      sha = undefined; // file doesn't exist yet
+    }
+
+    const body = {
+      message: commitMessage || `Update ${filePath}`,
+      content: base64Content,
+      branch
+    };
+    if (sha) body.sha = sha;
+
+    try {
+      return await githubRequest(`/repos/${owner}/${repo}/contents/${filePath}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+    } catch (err) {
+      if (!_retried && /GitHub API 409/.test(err.message)) {
+        return writeBinaryFile(filePath, base64Content, commitMessage, true);
+      }
+      throw err;
+    }
+  }
+
   // Generic styled confirm dialog (replaces native confirm()). Resolves
   // true if the user confirms, false if they cancel or dismiss.
   function confirmDialog({ title, message, confirmLabel = 'Confirm', cancelLabel = 'Cancel', danger = false }) {
@@ -300,7 +336,7 @@
     getConfig, setConfig,
     isConfigured, ensureConfigured,
     ensureAccessChoice,
-    readJsonFile, writeJsonFile,
+    readJsonFile, writeJsonFile, writeBinaryFile,
     confirmDialog
   };
 })();

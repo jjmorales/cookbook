@@ -30,6 +30,9 @@
   .meta-row span { display: flex; align-items: baseline; gap: 5px; }
   .meta-row b { color: var(--charcoal); font-weight: 500; }
 
+  .recipe-photo { width: 100%; max-height: 380px; object-fit: cover; border-radius: 6px; margin-bottom: 24px; }
+  body.cook-mode .recipe-photo { display: none; }
+
   .grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 36px; min-width: 0; }
   .grid > div { min-width: 0; }
   @media (max-width: 620px) { .grid { grid-template-columns: 1fr; } }
@@ -148,6 +151,8 @@ function render() {
         <a class="btn" id="editBtn" href="add-recipe.html?id=${encodeURIComponent(r.id)}">Edit recipe</a>
       </div>
     </div>
+
+    ${r.image ? `<img class="recipe-photo" src="${TipsEngine.escapeHtml(r.image)}" alt="${TipsEngine.escapeHtml(r.title)}">` : ''}
 
     <div class="meta-row">
       <span><b>${TipsEngine.escapeHtml(r.time)}</b> total</span>
