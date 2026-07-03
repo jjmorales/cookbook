@@ -40,6 +40,13 @@
   .filter-chip.active { background: var(--basil); color: var(--card); border-color: var(--basil); }
 
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; margin-bottom: 44px; }
+
+  @media (max-width: 480px) {
+    .topbar { padding: 16px 16px; }
+    .brand h1 { font-size: 19px; }
+    .wrap { padding: 24px 16px 60px; }
+    .grid { grid-template-columns: 1fr; }
+  }
   .recipe-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; cursor: pointer; text-decoration: none; display: block; color: inherit; transition: border-color 0.15s ease, transform 0.15s ease; }
   .recipe-card:hover { border-color: var(--mustard-line); transform: translateY(-2px); }
   .thumb { height: 140px; background: var(--basil); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }

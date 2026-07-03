@@ -109,6 +109,7 @@
 
   .actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 12px;
     justify-content: flex-end;
     border-top: 1px solid var(--border);
@@ -180,6 +181,16 @@
   .no-results { color: var(--muted); font-size: 14px; padding: 20px 0; }
 
   body.view-only .card-actions, body.view-only #addTipBtn { display: none; }
+
+  @media (max-width: 480px) {
+    .topbar { padding: 16px 16px; }
+    .brand h1 { font-size: 19px; }
+    .wrap { padding: 24px 16px 60px; }
+    .grid { grid-template-columns: 1fr; }
+    .actions { justify-content: stretch; }
+    .actions button { flex: 1 1 auto; }
+    button.danger { flex-basis: 100%; margin-right: 0; order: 3; }
+  }
 </style>
 </head>
 <body>

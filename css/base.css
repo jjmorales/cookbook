@@ -136,3 +136,7 @@ label {
   margin: 0 auto;
   padding: 40px 20px 80px;
 }
+
+html { overflow-x: hidden; }
+
+img, svg { max-width: 100%; height: auto; }
