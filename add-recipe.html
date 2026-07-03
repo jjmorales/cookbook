@@ -18,44 +18,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
 <style>
-  :root {
-    --basil: #2C3B2E;
-    --basil-soft: #435946;
-    --parchment: #EDE4D3;
-    --card: #F6F0E2;
-    --paprika: #C1502E;
-    --mustard: #E8A93B;
-    --mustard-soft: #F4DDA6;
-    --mustard-line: #C98A1E;
-    --charcoal: #2A2622;
-    --muted: #7A756A;
-    --border: #DCD2B8;
-    --danger: #A3402A;
-  }
+  body { padding: 40px 20px 100px; }
 
-  * { box-sizing: border-box; }
-
-  body {
-    margin: 0;
-    background: var(--parchment);
-    color: var(--charcoal);
-    font-family: 'Inter', sans-serif;
-    padding: 40px 20px 100px;
-  }
-
-  .wrap {
-    max-width: 720px;
-    margin: 0 auto;
-  }
-
-  .kicker {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--paprika);
-    margin: 0 0 6px;
-  }
+  .wrap { max-width: 720px; }
 
   h1.page-title {
     font-family: 'Fraunces', serif;
@@ -89,37 +54,6 @@
     font-style: normal;
     font-size: 12px;
     color: var(--muted);
-  }
-
-  label {
-    display: block;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--basil-soft);
-    margin-bottom: 6px;
-  }
-
-  input[type="text"],
-  input[type="number"],
-  textarea {
-    width: 100%;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 10px 12px;
-    font-family: 'Inter', sans-serif;
-    font-size: 15px;
-    color: var(--charcoal);
-    transition: border-color 0.15s ease;
-  }
-
-  input[type="text"]:focus,
-  input[type="number"]:focus,
-  textarea:focus {
-    outline: none;
-    border-color: var(--mustard-line);
   }
 
   textarea { resize: vertical; min-height: 64px; line-height: 1.5; }
@@ -836,12 +770,6 @@ document.getElementById('removeImage').addEventListener('click', () => {
   imageInput.value = '';
 });
 
-function slugify(title) {
-  return title.trim().toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '') || 'recipe';
-}
-
 async function handleSave() {
   const title = document.getElementById('recipeTitle').value.trim();
   if (!title) { alert('Give the recipe a title first.'); return; }
@@ -866,7 +794,7 @@ async function handleSave() {
     const { data: recipes } = await GitHubStore.readJsonFile('data/recipes.json');
 
     const existing = editingId ? recipes.find(r => r.id === editingId) : null;
-    const id = existing ? existing.id : slugify(title);
+    const id = existing ? existing.id : TipsEngine.slugify(title, 'recipe');
 
     const recipe = {
       id,

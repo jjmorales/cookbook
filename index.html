@@ -152,7 +152,7 @@ function renderCards() {
     card.href = `recipe.html?id=${encodeURIComponent(r.id)}`;
     card.innerHTML = `
       <div class="thumb ${r.image ? '' : 'placeholder'}">
-        ${r.image ? `<img src="${r.image}" alt="">` : ''}
+        ${r.image ? `<img src="${TipsEngine.escapeHtml(r.image)}" alt="">` : ''}
       </div>
       <div class="card-body">
         <h3>${TipsEngine.escapeHtml(r.title)}</h3>

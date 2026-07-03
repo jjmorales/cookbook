@@ -309,12 +309,6 @@ GitHubStore.ensureAccessChoice().then(mode => {
   history.replaceState(null, '', cleanUrl);
 })();
 
-function slugify(label) {
-  return label.trim().toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '') || 'tip';
-}
-
 // ----- Alias tag field -----
 function renderAliases() {
   aliasField.querySelectorAll('.tag-chip').forEach(el => el.remove());
@@ -411,7 +405,7 @@ async function handleSaveTip() {
   try {
     const { data: tips } = await GitHubStore.readJsonFile('data/tips.json');
 
-    const key = editingKey || slugify(label);
+    const key = editingKey || TipsEngine.slugify(label, 'tip');
     const next = { ...tips };
     next[key] = { label, aliases: finalAliases, note };
 

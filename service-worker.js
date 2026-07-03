@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cookbook-shell-v3';
+const CACHE_NAME = 'cookbook-shell-v4';
 
 // List every page/asset that should still work with no connection.
 // Update this list as you add real pages (recipe.html, tips.html, etc).
@@ -6,8 +6,10 @@ const APP_SHELL = [
   './index.html',
   './recipe.html',
   './add-recipe.html',
+  './tips.html',
   './css/base.css',
   './js/tips-engine.js',
+  './js/github-store.js',
   './js/sw-update.js',
   './manifest.webmanifest'
 ];

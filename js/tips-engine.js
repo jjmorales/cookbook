@@ -36,6 +36,14 @@
     return div.innerHTML;
   }
 
+  // Shared id/key generator: "Green Onion!" -> "green-onion". Falls back to
+  // fallback when the input has no alphanumeric characters left.
+  function slugify(text, fallback = 'item') {
+    return text.trim().toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '') || fallback;
+  }
+
   // Finds the first exact, word-boundary alias match anywhere in the text.
   function findExactTip(text, aliasIndex) {
     const lower = text.toLowerCase();
@@ -114,6 +122,7 @@
     analyzeIngredientText,
     renderLinkedText,
     escapeHtml,
-    levenshtein
+    levenshtein,
+    slugify
   };
 })();
