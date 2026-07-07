@@ -67,7 +67,7 @@
 
   .meta-fields {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 14px;
     margin-bottom: 34px;
   }
@@ -470,6 +470,10 @@
     <div class="field" style="margin-bottom:0">
       <label for="recipeEquip">Equipment</label>
       <input type="text" id="recipeEquip" placeholder="Wok or wide pan">
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label for="recipeCalories">Calories / serving</label>
+      <input type="number" min="0" step="1" id="recipeCalories" placeholder="450">
     </div>
   </div>
 
@@ -882,6 +886,7 @@ async function handleSave() {
       time: document.getElementById('recipeTime').value.trim(),
       servings: document.getElementById('recipeServings').value.trim(),
       equipment: document.getElementById('recipeEquip').value.trim(),
+      calories: document.getElementById('recipeCalories').value.trim(),
       tags,
       image,
       ingredients,
@@ -990,6 +995,7 @@ async function init() {
     document.getElementById('recipeTime').value = recipe.time || '';
     document.getElementById('recipeServings').value = recipe.servings || '';
     document.getElementById('recipeEquip').value = recipe.equipment || '';
+    document.getElementById('recipeCalories').value = recipe.calories || '';
 
     (recipe.tags || []).forEach(addTag);
 

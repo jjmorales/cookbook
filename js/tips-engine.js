@@ -117,6 +117,55 @@
     }).join('');
   }
 
+  // Matches a leading numeric quantity at the start of a qty string, allowing
+  // whole numbers, decimals, simple fractions ("1/2"), and mixed numbers
+  // ("1 1/2"), so it can be scaled for a different serving size.
+  const LEADING_QTY_RE = /^\s*(\d+\s+\d+\/\d+|\d+\/\d+|\d*\.\d+|\d+)/;
+
+  function parseLeadingQty(str) {
+    const match = LEADING_QTY_RE.exec(str);
+    if (!match) return null;
+    const token = match[1];
+    let value;
+    if (token.includes(' ')) {
+      const [whole, frac] = token.split(' ');
+      const [n, d] = frac.split('/').map(Number);
+      value = Number(whole) + n / d;
+    } else if (token.includes('/')) {
+      const [n, d] = token.split('/').map(Number);
+      value = n / d;
+    } else {
+      value = Number(token);
+    }
+    return { value, rest: str.slice(match[0].length) };
+  }
+
+  // Formats a scaled numeric quantity, using simple fractions for common
+  // eighths so ingredient lists still read naturally (e.g. "0.5" -> "1/2").
+  function formatQty(value) {
+    const rounded = Math.round(value * 8) / 8;
+    const whole = Math.floor(rounded);
+    const frac = rounded - whole;
+    const eighths = Math.round(frac * 8);
+
+    const fractionMap = { 1: '1/8', 2: '1/4', 3: '3/8', 4: '1/2', 5: '5/8', 6: '3/4', 7: '7/8' };
+    const fracStr = fractionMap[eighths] || '';
+
+    if (!whole && fracStr) return fracStr;
+    if (whole && fracStr) return `${whole} ${fracStr}`;
+    return String(whole || rounded);
+  }
+
+  // Scales the leading numeric amount in a qty string ("2 cups" -> "3 cups"
+  // at 1.5x). Quantities with no parseable leading number (e.g. "a pinch")
+  // are returned unchanged.
+  function scaleQty(qty, factor) {
+    if (!qty || factor === 1) return qty;
+    const parsed = parseLeadingQty(qty);
+    if (!parsed) return qty;
+    return formatQty(parsed.value * factor) + parsed.rest;
+  }
+
   window.TipsEngine = {
     loadTips,
     loadRecipes,
@@ -126,6 +175,7 @@
     renderLinkedText,
     escapeHtml,
     levenshtein,
-    slugify
+    slugify,
+    scaleQty
   };
 })();

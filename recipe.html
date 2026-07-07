@@ -26,9 +26,18 @@
 
   h1.recipe-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: clamp(28px, 8vw, 40px); line-height: 1.05; color: var(--basil); margin: 0 0 18px; overflow-wrap: break-word; }
 
-  .meta-row { display: flex; flex-wrap: wrap; gap: 10px 18px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--basil-soft); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 10px 0; margin-bottom: 30px; }
+  .meta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--basil-soft); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 10px 0; margin-bottom: 30px; }
   .meta-row span { display: flex; align-items: baseline; gap: 5px; }
   .meta-row b { color: var(--charcoal); font-weight: 500; }
+
+  .servings-adjust { display: flex; align-items: center; gap: 6px; }
+  .servings-adjust button { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--border); background: var(--card); color: var(--basil-soft); font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
+  .servings-adjust button:hover { border-color: var(--mustard-line); color: var(--paprika); }
+  .servings-adjust button:disabled { opacity: 0.4; cursor: default; }
+  .servings-adjust .count { min-width: 1.6em; text-align: center; color: var(--charcoal); font-weight: 500; }
+  .servings-adjust .reset { border: none; background: none; width: auto; height: auto; text-decoration: underline; text-decoration-style: dotted; font-size: 11px; color: var(--muted); display: none; }
+  .servings-adjust .reset.show { display: inline-flex; }
+  body.cook-mode .servings-adjust { display: none; }
 
   .recipe-photo { width: 100%; max-height: 380px; object-fit: cover; border-radius: 6px; margin-bottom: 24px; }
   body.cook-mode .recipe-photo { display: none; }
@@ -157,7 +166,13 @@ function render() {
 
     <div class="meta-row">
       <span><b>${TipsEngine.escapeHtml(r.time)}</b> total</span>
-      <span><b>${TipsEngine.escapeHtml(r.servings)}</b> servings</span>
+      <span class="servings-adjust" id="servingsAdjust">
+        <button type="button" id="servingsDown" aria-label="Decrease servings">&minus;</button>
+        <b class="count" id="servingsCount">${TipsEngine.escapeHtml(r.servings)}</b> servings
+        <button type="button" id="servingsUp" aria-label="Increase servings">+</button>
+        <button type="button" class="reset" id="servingsReset">reset</button>
+      </span>
+      ${r.calories ? `<span id="caloriesMeta"><b id="caloriesValue">${TipsEngine.escapeHtml(r.calories)}</b> cal/serving</span>` : ''}
       <span><b>${TipsEngine.escapeHtml(r.equipment || '')}</b></span>
     </div>
 
@@ -191,12 +206,7 @@ function render() {
     <p class="hint">hover an underlined ingredient (desktop) \u00b7 press and hold (mobile) \u00b7 click to jump to its note</p>
   `;
 
-  const ingredientsEl = document.getElementById('ingredients');
-  r.ingredients.forEach(ing => {
-    const li = document.createElement('li');
-    li.innerHTML = `<span class="qty">${TipsEngine.escapeHtml(ing.qty)}</span><span class="ing-name">${TipsEngine.renderLinkedText(ing.name, aliasIndex, tipsObj)}</span>`;
-    ingredientsEl.appendChild(li);
-  });
+  renderIngredients();
 
   const stepsEl = document.getElementById('steps');
   r.steps.forEach(step => {
@@ -225,6 +235,68 @@ function render() {
   setupInteractions();
   setupNotes();
   setupCookMode();
+  setupServingsAdjust();
+}
+
+// Base (stored) serving count parsed from the recipe, or null when the
+// servings field isn't a plain number (e.g. "1 loaf") and can't be scaled.
+let baseServings = null;
+let currentServings = null;
+
+function renderIngredients() {
+  const ingredientsEl = document.getElementById('ingredients');
+  const factor = (baseServings && currentServings) ? currentServings / baseServings : 1;
+  ingredientsEl.innerHTML = '';
+  currentRecipe.ingredients.forEach(ing => {
+    const li = document.createElement('li');
+    const qty = TipsEngine.scaleQty(ing.qty, factor);
+    li.innerHTML = `<span class="qty">${TipsEngine.escapeHtml(qty)}</span><span class="ing-name">${TipsEngine.renderLinkedText(ing.name, aliasIndex, tipsObj)}</span>`;
+    ingredientsEl.appendChild(li);
+  });
+}
+
+function setupServingsAdjust() {
+  const r = currentRecipe;
+  const parsed = parseFloat(r.servings);
+  const isScalable = Number.isFinite(parsed) && parsed > 0 && String(parsed) === String(r.servings).trim();
+
+  const downBtn = document.getElementById('servingsDown');
+  const upBtn = document.getElementById('servingsUp');
+  const resetBtn = document.getElementById('servingsReset');
+  const countEl = document.getElementById('servingsCount');
+  const caloriesValueEl = document.getElementById('caloriesValue');
+
+  if (!isScalable) {
+    downBtn.style.display = 'none';
+    upBtn.style.display = 'none';
+    return;
+  }
+
+  baseServings = parsed;
+  currentServings = parsed;
+
+  function update() {
+    countEl.textContent = currentServings;
+    downBtn.disabled = currentServings <= 1;
+    resetBtn.classList.toggle('show', currentServings !== baseServings);
+    if (caloriesValueEl && r.calories) {
+      const cal = parseFloat(r.calories);
+      if (Number.isFinite(cal)) {
+        caloriesValueEl.textContent = Math.round(cal * (currentServings / baseServings));
+      }
+    }
+    renderIngredients();
+  }
+
+  downBtn.addEventListener('click', () => {
+    if (currentServings > 1) { currentServings--; update(); }
+  });
+  upBtn.addEventListener('click', () => {
+    currentServings++; update();
+  });
+  resetBtn.addEventListener('click', () => {
+    currentServings = baseServings; update();
+  });
 }
 
 function setupInteractions() {
