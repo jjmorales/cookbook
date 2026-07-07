@@ -39,50 +39,5 @@
       "Bake at 450°F for 22–25 minutes until deep golden."
     ],
     "notes": []
-  },
-  {
-    "id": "braised-short-rib",
-    "title": "Braised short rib",
-    "kicker": "Slow cook",
-    "time": "3 hr 20 min",
-    "servings": "4",
-    "equipment": "Dutch oven",
-    "tags": [
-      "Slow cook"
-    ],
-    "image": null,
-    "ingredients": [
-      {
-        "qty": "4",
-        "name": "bone-in short ribs"
-      },
-      {
-        "qty": "2",
-        "name": "carrots, chopped"
-      },
-      {
-        "qty": "1",
-        "name": "onion, chopped"
-      },
-      {
-        "qty": "3 cloves",
-        "name": "garlic"
-      },
-      {
-        "qty": "2 cups",
-        "name": "red wine"
-      },
-      {
-        "qty": "2 cups",
-        "name": "beef stock"
-      }
-    ],
-    "steps": [
-      "Sear short ribs on all sides, set aside.",
-      "Sauté carrots, onion, and garlic until softened.",
-      "Deglaze with red wine, reduce by half.",
-      "Return ribs to the pot, add stock, cover and braise at 325°F for 3 hours."
-    ],
-    "notes": []
   }
 ]
