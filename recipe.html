@@ -114,6 +114,7 @@ let aliasIndex = [];
 async function init() {
   await GitHubStore.ensureAccessChoice();
   if (GitHubStore.isViewOnly()) document.body.classList.add('view-only');
+  else GitHubStore.flushPendingChanges();
 
   if (!recipeId) {
     root.innerHTML = '<p>No recipe specified. <a href="index.html">Back to your cookbook</a>.</p>';

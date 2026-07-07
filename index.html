@@ -59,6 +59,10 @@
 
   .saved-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--mustard-soft); border: 1px solid var(--mustard-line); border-radius: 6px; padding: 12px 16px; margin-bottom: 24px; font-size: 13.5px; color: var(--charcoal); }
   .saved-banner button { background: none; border: none; color: var(--basil-soft); font-size: 16px; line-height: 1; cursor: pointer; padding: 2px 4px; flex-shrink: 0; }
+  .sync-banner { display: none; align-items: center; justify-content: space-between; gap: 12px; background: #FBEAE4; border: 1px solid var(--danger, #A3402A); border-radius: 6px; padding: 12px 16px; margin-bottom: 24px; font-size: 13.5px; color: var(--danger, #A3402A); }
+  .sync-banner.show { display: flex; }
+  .sync-banner button { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; background: none; border: 1px solid var(--danger, #A3402A); color: var(--danger, #A3402A); border-radius: 4px; padding: 6px 12px; cursor: pointer; flex-shrink: 0; }
+  .sync-banner button:hover { background: var(--danger, #A3402A); color: #fff; }
 </style>
 </head>
 <body>
@@ -80,6 +84,11 @@
   <div class="saved-banner" id="savedBanner" style="display:none">
     <span id="savedBannerText"></span>
     <button type="button" id="savedBannerClose" aria-label="Dismiss">&times;</button>
+  </div>
+
+  <div class="sync-banner" id="syncBanner">
+    <span id="syncBannerText"></span>
+    <button type="button" id="syncBannerRetry">Retry now</button>
   </div>
 
   <div class="toolbar">
@@ -108,7 +117,37 @@
 <script>
 GitHubStore.ensureAccessChoice().then(mode => {
   if (mode === 'view-only') document.getElementById('addRecipeLink').style.display = 'none';
+  else GitHubStore.flushPendingChanges().then(refreshSyncBanner);
 });
+
+// A delete/edit that's still unresolved after a couple of minutes (repeated
+// flush failures — offline, bad token, etc.) is surfaced here rather than
+// silently reverting, since the pending ledger no longer expires on a timer.
+function refreshSyncBanner() {
+  const stuck = GitHubStore.getStuckPending();
+  const banner = document.getElementById('syncBanner');
+  if (stuck.length === 0) {
+    banner.classList.remove('show');
+    return;
+  }
+  const text = document.getElementById('syncBannerText');
+  text.textContent = stuck.length === 1
+    ? `A change to "${stuck[0].label}" hasn't synced to GitHub yet — it may not be saved.`
+    : `${stuck.length} changes haven't synced to GitHub yet — they may not be saved.`;
+  banner.classList.add('show');
+}
+
+document.getElementById('syncBannerRetry').addEventListener('click', async () => {
+  const btn = document.getElementById('syncBannerRetry');
+  btn.disabled = true;
+  btn.textContent = 'Retrying…';
+  await GitHubStore.flushPendingChanges();
+  refreshSyncBanner();
+  btn.disabled = false;
+  btn.textContent = 'Retry now';
+});
+
+refreshSyncBanner();
 
 (function showSavedBanner() {
   const params = new URLSearchParams(location.search);

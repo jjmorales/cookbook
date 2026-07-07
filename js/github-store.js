@@ -228,7 +228,9 @@
   // GitHub's Contents API can briefly serve a stale sha right after a
   // commit (read-after-write lag), which surfaces as a 409 on the PUT.
   // On a 409, wait a bit for the lag to clear, re-fetch the sha, and
-  // retry — a few times, with backoff, before giving up.
+  // retry — several times, with backoff, before giving up. This lag is
+  // the actual bottleneck behind back-to-back edits/deletes, so this is
+  // deliberately patient (up to ~16s total) rather than failing fast.
   async function writeJsonFile(filePath, value, commitMessage, _attempt = 0) {
     ensureConfigured();
     const { owner, repo, branch } = getConfig();
@@ -256,8 +258,8 @@
         body: JSON.stringify(body)
       });
     } catch (err) {
-      if (_attempt < 3 && /GitHub API 409/.test(err.message)) {
-        await sleep(500 * (_attempt + 1));
+      if (_attempt < 6 && /GitHub API 409/.test(err.message)) {
+        await sleep(500 * Math.pow(1.6, _attempt));
         return writeJsonFile(filePath, value, commitMessage, _attempt + 1);
       }
       throw err;
@@ -337,6 +339,166 @@
     });
   }
 
+  // ---------------------------------------------------------------------
+  // Pending-changes ledger
+  //
+  // GitHub Pages takes up to a minute or so to rebuild after a commit, and
+  // the Contents API itself can briefly serve stale reads right after a
+  // write. Without this, a recipe you just deleted can reappear (or block
+  // the next delete) until that lag clears. This ledger records recent
+  // deletes/upserts in localStorage (shared across tabs/pages) so any page
+  // reading the published data/recipes.json can patch it to reflect
+  // changes that are still propagating, making the UI feel instant.
+  //
+  // Entries are cleared once a real write to GitHub succeeds — there's no
+  // blind TTL expiry, because expiring an unresolved entry would silently
+  // "undelete" a recipe with no explanation. Instead, every page flushes
+  // the ledger on load (see flushPendingChanges), and an entry that's been
+  // stuck for a while is surfaced via getStuckPending so the UI can show
+  // something instead of quietly reverting.
+  const PENDING_STORAGE_KEY = 'cookbook_pending_recipe_changes';
+  const STUCK_AFTER_MS = 2 * 60 * 1000;
+
+  function readPending() {
+    try {
+      return JSON.parse(localStorage.getItem(PENDING_STORAGE_KEY) || '{}');
+    } catch (err) {
+      return {};
+    }
+  }
+
+  function writePending(pending) {
+    localStorage.setItem(PENDING_STORAGE_KEY, JSON.stringify(pending));
+  }
+
+  function recordPendingDelete(id) {
+    const pending = readPending();
+    pending[id] = { op: 'delete', at: Date.now(), attempts: 0 };
+    writePending(pending);
+  }
+
+  function recordPendingUpsert(recipe) {
+    const pending = readPending();
+    pending[recipe.id] = { op: 'upsert', recipe, at: Date.now(), attempts: 0 };
+    writePending(pending);
+  }
+
+  function clearPending(id) {
+    const pending = readPending();
+    delete pending[id];
+    writePending(pending);
+  }
+
+  // Entries that have been sitting unresolved for a while (repeated
+  // flush failures) — worth telling the user about, since the ledger no
+  // longer expires them silently. Each includes a human label for display.
+  function getStuckPending() {
+    const pending = readPending();
+    const now = Date.now();
+    return Object.entries(pending)
+      .filter(([, entry]) => now - entry.at > STUCK_AFTER_MS)
+      .map(([id, entry]) => ({
+        id,
+        op: entry.op,
+        label: entry.op === 'delete' ? id : entry.recipe.title
+      }));
+  }
+
+  // Patches a freshly-fetched recipe list with any still-propagating local
+  // changes: drops recipes pending deletion, and applies/inserts recipes
+  // pending an upsert that the published JSON hasn't caught up with yet.
+  function applyPendingChanges(recipes) {
+    const pending = readPending();
+    if (Object.keys(pending).length === 0) return recipes;
+
+    let next = recipes.filter(r => pending[r.id]?.op !== 'delete');
+    Object.values(pending).forEach(entry => {
+      if (entry.op !== 'upsert') return;
+      const idx = next.findIndex(r => r.id === entry.recipe.id);
+      if (idx === -1) next.push(entry.recipe);
+      else next[idx] = entry.recipe;
+    });
+    return next;
+  }
+
+  async function flushOne(id, entry) {
+    const { data: recipes } = await readJsonFile('data/recipes.json');
+    const next = entry.op === 'delete'
+      ? recipes.filter(r => r.id !== id)
+      : (recipes.some(r => r.id === id)
+        ? recipes.map(r => (r.id === id ? entry.recipe : r))
+        : [...recipes, entry.recipe]);
+    const message = entry.op === 'delete'
+      ? `Delete recipe: ${id}`
+      : `${recipes.some(r => r.id === id) ? 'Update' : 'Add'} recipe: ${entry.recipe.title}`;
+    await writeJsonFile('data/recipes.json', next, message);
+    clearPending(id);
+  }
+
+  let flushing = null;
+
+  // Actually pushes any pending deletes/upserts recorded by another page
+  // (e.g. add-recipe.html's delete button, which navigates away instantly
+  // for a seamless feel) through to GitHub. Runs one write at a time —
+  // deliberately serialized, so a second delete never races the first
+  // one's still-propagating commit and hit the 409 read-after-write lag
+  // that used to surface as an error popup. Called on load from every
+  // page (not just index.html), so a delete still reaches GitHub even if
+  // the user navigates straight to recipe.html/tips.html afterwards
+  // instead of back to the list. Safe to call from multiple tabs at once:
+  // entries are cleared from the shared ledger as they succeed, and left
+  // in place (to retry next load) if they fail.
+  async function flushPendingChanges() {
+    if (flushing) return flushing;
+    flushing = (async () => {
+      const ids = Object.keys(readPending());
+      for (const id of ids) {
+        const entry = readPending()[id];
+        if (!entry) continue; // already flushed by another tab
+        try {
+          await flushOne(id, entry);
+        } catch (err) {
+          // Leave it in the ledger — it keeps hiding/patching the recipe
+          // client-side in the meantime, and the next flush (e.g. next
+          // page load) will retry it. Track attempts so a stubbornly
+          // stuck entry can be surfaced via getStuckPending instead of
+          // failing (or reverting) silently forever.
+          const pending = readPending();
+          if (pending[id]) {
+            pending[id].attempts = (pending[id].attempts || 0) + 1;
+            writePending(pending);
+          }
+          console.error(`Pending change for "${id}" hasn't reached GitHub yet, will retry later:`, err);
+        }
+      }
+    })();
+    try {
+      await flushing;
+    } finally {
+      flushing = null;
+    }
+  }
+
+  // Best-effort attempt to push a single change through immediately,
+  // bounded to one try (no long retry backoff) so a caller can await it
+  // briefly before navigating away — e.g. add-recipe.html's delete button
+  // gives the real GitHub write a quick head start before handing off to
+  // the next page's flushPendingChanges for the durable retry. Never
+  // throws: failures just mean the ledger entry rides along to be flushed
+  // later, same as if this hadn't been called at all.
+  async function flushSoon(id, { timeoutMs = 1500 } = {}) {
+    const entry = readPending()[id];
+    if (!entry) return;
+    try {
+      await Promise.race([
+        flushOne(id, entry),
+        sleep(timeoutMs).then(() => { throw new Error('flushSoon timed out'); })
+      ]);
+    } catch (err) {
+      // Left in the ledger for the next page's flushPendingChanges to retry.
+    }
+  }
+
   window.GitHubStore = {
     getToken, setToken, clearToken,
     isViewOnly, setViewOnly, exitViewOnly,
@@ -344,6 +506,8 @@
     isConfigured, ensureConfigured,
     ensureAccessChoice,
     readJsonFile, writeJsonFile, writeBinaryFile,
-    confirmDialog
+    confirmDialog,
+    recordPendingDelete, recordPendingUpsert, clearPending, applyPendingChanges,
+    getStuckPending, flushPendingChanges, flushSoon
   };
 })();

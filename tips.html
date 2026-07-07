@@ -288,6 +288,7 @@ const searchInput = document.getElementById('searchInput');
 
 GitHubStore.ensureAccessChoice().then(mode => {
   if (mode === 'view-only') document.body.classList.add('view-only');
+  else GitHubStore.flushPendingChanges();
 });
 
 (function showSavedBanner() {

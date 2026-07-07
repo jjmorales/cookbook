@@ -14,7 +14,10 @@
   async function loadRecipes() {
     const res = await fetch('data/recipes.json', { cache: 'no-store' });
     if (!res.ok) throw new Error('Could not load recipes.json');
-    return res.json();
+    const recipes = await res.json();
+    // Patch in any local edits/deletes still propagating through GitHub
+    // Pages' rebuild, so they don't flicker back into view.
+    return window.GitHubStore ? window.GitHubStore.applyPendingChanges(recipes) : recipes;
   }
 
   // Flattens { key: { label, aliases: [...] } } into a lookup list.

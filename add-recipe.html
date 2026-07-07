@@ -540,6 +540,8 @@ if (GitHubStore.isViewOnly()) {
   throw new Error('view-only mode: add-recipe form disabled');
 }
 
+GitHubStore.flushPendingChanges();
+
 let ingredientCount = 0;
 let stepCount = 0;
 let allAliases = [];
@@ -929,22 +931,20 @@ async function handleDelete() {
   });
   if (!confirmed) return;
 
-  const deleteBtn = document.getElementById('deleteBtn');
-  const originalLabel = deleteBtn.textContent;
-  deleteBtn.disabled = true;
-  deleteBtn.textContent = 'Deleting…';
-
-  try {
-    const { data: recipes } = await GitHubStore.readJsonFile('data/recipes.json');
-    const next = recipes.filter(r => r.id !== editingId);
-    await GitHubStore.writeJsonFile('data/recipes.json', next, `Delete recipe: ${title}`);
-    window.location.href = 'index.html?saved=deleted';
-  } catch (err) {
-    console.error(err);
-    alert('Could not delete from GitHub — ' + err.message);
-    deleteBtn.disabled = false;
-    deleteBtn.textContent = originalLabel;
-  }
+  // Optimistic: mark this recipe as gone right away so every page reading
+  // the (possibly still-rebuilding) published recipes.json hides it
+  // immediately. Give the real GitHub write a brief, bounded head start
+  // (flushSoon) before leaving — full-page navigation would otherwise
+  // abort it outright, and it's what makes deletes durable even if the
+  // user closes the tab right after instead of going back to the list.
+  // Whatever doesn't finish in time rides along in the ledger and gets
+  // picked up by flushPendingChanges on the next page's load. This is
+  // what makes back-to-back deletes feel instant instead of blocking on
+  // GitHub Pages/API propagation, and lets the queue serialize writes
+  // instead of racing.
+  GitHubStore.recordPendingDelete(editingId);
+  await GitHubStore.flushSoon(editingId);
+  window.location.href = 'index.html?saved=deleted';
 }
 
 document.getElementById('deleteBtn').addEventListener('click', handleDelete);
