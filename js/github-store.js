@@ -219,12 +219,17 @@
     return { data: JSON.parse(base64ToUtf8(result.content)), sha: result.sha };
   }
 
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   // Writes a JSON value back to filePath. Always re-fetches the current
   // sha immediately before writing so two saves in a row don't race.
   // GitHub's Contents API can briefly serve a stale sha right after a
   // commit (read-after-write lag), which surfaces as a 409 on the PUT.
-  // On a 409, re-fetch the sha and retry once before giving up.
-  async function writeJsonFile(filePath, value, commitMessage, _retried = false) {
+  // On a 409, wait a bit for the lag to clear, re-fetch the sha, and
+  // retry — a few times, with backoff, before giving up.
+  async function writeJsonFile(filePath, value, commitMessage, _attempt = 0) {
     ensureConfigured();
     const { owner, repo, branch } = getConfig();
     let sha;
@@ -251,8 +256,9 @@
         body: JSON.stringify(body)
       });
     } catch (err) {
-      if (!_retried && /GitHub API 409/.test(err.message)) {
-        return writeJsonFile(filePath, value, commitMessage, true);
+      if (_attempt < 3 && /GitHub API 409/.test(err.message)) {
+        await sleep(500 * (_attempt + 1));
+        return writeJsonFile(filePath, value, commitMessage, _attempt + 1);
       }
       throw err;
     }
@@ -260,7 +266,7 @@
 
   // Writes raw base64 content (e.g. an image) to filePath, mirroring
   // writeJsonFile's read-sha-then-put-with-retry-on-409 flow.
-  async function writeBinaryFile(filePath, base64Content, commitMessage, _retried = false) {
+  async function writeBinaryFile(filePath, base64Content, commitMessage, _attempt = 0) {
     ensureConfigured();
     const { owner, repo, branch } = getConfig();
     let sha;
@@ -287,8 +293,9 @@
         body: JSON.stringify(body)
       });
     } catch (err) {
-      if (!_retried && /GitHub API 409/.test(err.message)) {
-        return writeBinaryFile(filePath, base64Content, commitMessage, true);
+      if (_attempt < 3 && /GitHub API 409/.test(err.message)) {
+        await sleep(500 * (_attempt + 1));
+        return writeBinaryFile(filePath, base64Content, commitMessage, _attempt + 1);
       }
       throw err;
     }
