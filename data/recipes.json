@@ -84,29 +84,5 @@
       "Return ribs to the pot, add stock, cover and braise at 325°F for 3 hours."
     ],
     "notes": []
-  },
-  {
-    "id": "gggg",
-    "title": "gggg",
-    "kicker": "",
-    "time": "ggg",
-    "servings": "gg",
-    "equipment": "gg",
-    "tags": [],
-    "image": null,
-    "ingredients": [
-      {
-        "qty": "2 cups",
-        "name": "day-old rice"
-      },
-      {
-        "qty": "2 stalks",
-        "name": "green onion, sliced"
-      }
-    ],
-    "steps": [
-      "Heat oil in a wok over high heat until shimmering."
-    ],
-    "notes": []
   }
 ]
